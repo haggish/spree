@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/events/events').then(m => m.EventsComponent),
   },
   {
+    path: 'events/:date',
+    loadComponent: () => import('./pages/events/events').then(m => m.EventsComponent),
+  },
+  {
     path: 'venues',
     loadComponent: () => import('./pages/venues/venues').then(m => m.VenuesComponent),
   },

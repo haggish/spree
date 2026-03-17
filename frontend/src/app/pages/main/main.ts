@@ -1,24 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-
-interface TimeRange {
-  start: string;
-  end: string;
-}
-
-interface Venue {
-  id: number;
-  name: string;
-  location: { x: number; y: number };
-}
-
-interface Event {
-  id: number;
-  name: string;
-  author: string;
-  during: TimeRange;
-  venue: Venue;
-}
+import { Event, todayForUrl } from '../../shared/events';
 
 @Component({
   selector: 'app-main',
@@ -40,7 +22,7 @@ interface Event {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainComponent {
-  protected readonly dateForUrl = computed(() => '21-03-2026');
+  protected readonly dateForUrl = computed(() => todayForUrl());
 
   protected readonly dateForTitle = computed(() => this.dateForUrl().replaceAll('-', '.'));
 
