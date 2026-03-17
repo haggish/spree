@@ -1,13 +1,15 @@
-<main>
-  <h1>EVENTS TODAY {{ dateForTitle() }}</h1>
-  <ul>
-    @for (event of events.value() ?? []; track event.id) {
-      <li>
-        <span><strong>{{ event.author }}</strong></span>
-        <span>{{ event.name }}</span>
-        <span>{{ event.venue.name }}</span>
-      </li>
-    }
-  </ul>
-</main>
-<router-outlet />
+<nav mat-tab-nav-bar [tabPanel]="tabPanel">
+  @for (link of navLinks; track link.path) {
+    <a mat-tab-link
+       [routerLink]="link.path"
+       routerLinkActive
+       #rla="routerLinkActive"
+       [active]="rla.isActive"
+       [routerLinkActiveOptions]="{ exact: link.path === '/' }">
+      {{ link.label }}
+    </a>
+  }
+</nav>
+<mat-tab-nav-panel #tabPanel>
+  <router-outlet />
+</mat-tab-nav-panel>
