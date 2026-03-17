@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Event, todayForUrl } from '../../shared/events';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-main',
@@ -27,6 +28,6 @@ export class MainComponent {
   protected readonly dateForTitle = computed(() => this.dateForUrl().replaceAll('-', '.'));
 
   protected readonly events = httpResource<Event[]>(
-    () => `http://localhost:8080/events/at/${this.dateForUrl()}`,
+    () => `${environment.apiUrl}/events/at/${this.dateForUrl()}`,
   );
 }
