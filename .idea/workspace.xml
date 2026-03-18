@@ -5,12 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b877dded-ade6-479c-8bbc-688e09626e9b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/frontend/angular.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/angular.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/app.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/app.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/pages/events/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/pages/events/events.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/pages/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/pages/main/main.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/routes/GoogleMapsRouteAPIBasedTransits.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/routes/Transit.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/routes/TransitSpec.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/routes/Transits.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/routes/TransitsViaREST.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/schedules/Schedule.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/schedules/ScheduleViaREST.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/schedules/Scheduler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/schedules/SchedulerImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/users/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/specs/routing.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/SpreeApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/katastrofi/spree/SpreeApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -29,6 +37,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "haggish"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/haggish/spree.git",
+    "accountId": "c905e338-59db-4708-bff8-860ece4420ce"
+  }
+}]]></component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -69,6 +89,9 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\mikao\Projects\spree\src\main\java\org\katastrofi\spree" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\mikao\Projects\spree" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="org.katastrofi.spree.clustering" />
