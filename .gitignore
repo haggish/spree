@@ -19,6 +19,12 @@ dist/
 # Claude Code
 CLAUDE.md
 
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+
 # OS files
 Thumbs.db
 .DS_Store

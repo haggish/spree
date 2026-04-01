@@ -11,7 +11,7 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 │  │ Map      │ Spree    │Settings │  │
 │  │Component │ Panel    │Drawer   │  │
 │  └──────────┴──────────┴─────────┘  │
-│  Google Maps JS SDK                 │
+│  Google Maps JS SDK · OIDC Client   │
 └──────────────┬──────────────────────┘
                │ REST API
 ┌──────────────▼──────────────────────┐
@@ -20,7 +20,12 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 │  │ Events   │ Venues   │ Route   │  │
 │  │ Module   │ Module   │Optimizer│  │
 │  └──────────┴──────────┴─────────┘  │
-│  Google Routes API                  │
+│  Google Routes API · JWT Auth       │
+└──────────────┬──────────────────────┘
+               │ JWKS validation
+┌──────────────▼──────────────────────┐
+│        Keycloak 26 (OIDC)          │
+│  Realm: spree · Postgres backend   │
 └─────────────────────────────────────┘
 ```
 
@@ -28,20 +33,23 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 
 - **Frontend**: Angular 21 (standalone components, signals, reactive state)
 - **Backend**: NestJS 11 (TypeScript, Swagger docs)
+- **Auth**: Keycloak 26 (OIDC, JWT, role-based access)
 - **Maps**: Google Maps JavaScript SDK (Advanced Markers, Geometry)
 - **Routing**: Google Routes API v2
 - **Places**: Google Places API (Place IDs)
+- **Infra**: Terraform (AWS ECS Fargate, S3, CloudFront, RDS, ALB)
 
 ## Prerequisites
 
 - Node.js 22+
 - npm 10+
+- Docker & Docker Compose
 - Google Cloud project with these APIs enabled:
   - Maps JavaScript API
   - Routes API
   - Places API
 
-## Setup
+## Local Development
 
 ### 1. Google Cloud Setup
 
@@ -51,12 +59,47 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 4. Create an API key under Credentials
 5. (Recommended) Restrict the key to your domains
 
-### 2. Backend
+### 2. Docker Compose (Keycloak + Backend)
+
+The quickest way to get the backend and Keycloak running:
+
+```bash
+# Optional: provide a Google Maps API key (omit for mock routing)
+export GOOGLE_MAPS_API_KEY=your-key
+
+docker-compose up -d
+```
+
+This starts three services:
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Keycloak** | `http://localhost:8080` | Identity provider (admin/admin) |
+| **Backend** | `http://localhost:3000` | NestJS API server |
+| **Postgres** | internal | Keycloak database |
+
+The backend waits for Keycloak to be healthy before starting. The Keycloak realm (`spree`) and test users are auto-imported.
+
+**Test users** (password = username + `123`):
+- `alice` / `alice123` — regular user
+- `bob` / `bob123` — organizer role
+- `admin` / `admin123` — admin role
+
+To stop and remove everything:
+
+```bash
+docker-compose down        # stop containers
+docker-compose down -v     # stop and delete Keycloak database volume
+```
+
+### 3. Backend (without Docker)
+
+If you prefer running the backend directly:
 
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env and add your GOOGLE_MAPS_API_KEY
+# Edit .env: set GOOGLE_MAPS_API_KEY, KEYCLOAK_URL, KEYCLOAK_REALM
 
 npm install
 npm run start:dev
@@ -67,7 +110,9 @@ Swagger docs at `http://localhost:3000/api/docs`
 
 > **No API key?** The backend falls back to haversine-based mock routing automatically.
 
-### 3. Frontend
+> **Keycloak required.** The backend validates JWTs against Keycloak. Run at minimum `docker-compose up -d keycloak keycloak-db` to have auth working.
+
+### 4. Frontend
 
 ```bash
 cd frontend
@@ -78,6 +123,122 @@ npm start
 ```
 
 App runs at `http://localhost:4200` (proxies `/api` → backend)
+
+## AWS Deployment
+
+The `terraform/` directory contains infrastructure-as-code to deploy the full stack to AWS.
+
+### Architecture
+
+```
+CloudFront
+  ├── Default     → S3 (Angular SPA)
+  ├── /api/*      → ALB → ECS Fargate (Backend, port 3000)
+  └── /realms/*   → ALB → ECS Fargate (Keycloak, port 8080)
+
+RDS Postgres (private subnets) ← Keycloak only
+```
+
+All traffic goes through CloudFront (same-origin, no CORS issues). Backend and Keycloak run on ECS Fargate in private subnets behind an ALB. Keycloak's Postgres is on RDS.
+
+### Prerequisites
+
+- [Terraform](https://www.terraform.io/downloads) >= 1.5
+- [AWS CLI](https://aws.amazon.com/cli/) configured with credentials
+- Docker (for building and pushing images)
+
+### 1. Provision Infrastructure
+
+```bash
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Review the plan (you'll be prompted for your Google Maps API key)
+terraform plan
+
+# Apply
+terraform apply
+```
+
+Terraform creates ~35 resources: VPC, subnets, NAT gateway, ALB, ECS cluster, RDS, S3 bucket, CloudFront distribution, ECR repos, and SSM secrets.
+
+Key outputs after apply:
+
+| Output | Description |
+|--------|-------------|
+| `cloudfront_url` | Main app URL |
+| `alb_url` | Direct ALB URL |
+| `ecr_backend_url` | ECR repo for backend image |
+| `ecr_keycloak_url` | ECR repo for Keycloak image |
+| `spa_bucket` | S3 bucket for frontend files |
+| `cloudfront_distribution_id` | For cache invalidation |
+
+### 2. Build & Push Docker Images
+
+```bash
+# Get output values
+REGION=$(terraform -chdir=terraform output -raw aws_region 2>/dev/null || echo "eu-central-1")
+ECR_BACKEND=$(terraform -chdir=terraform output -raw ecr_backend_url)
+ECR_KEYCLOAK=$(terraform -chdir=terraform output -raw ecr_keycloak_url)
+ACCOUNT=$(echo $ECR_BACKEND | cut -d. -f1)
+
+# Authenticate Docker to ECR
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT.dkr.ecr.$REGION.amazonaws.com
+
+# Build and push backend
+docker build -t $ECR_BACKEND:latest -f backend/Dockerfile backend/
+docker push $ECR_BACKEND:latest
+
+# Build and push Keycloak (with realm baked in)
+docker build -t $ECR_KEYCLOAK:latest -f keycloak/Dockerfile keycloak/
+docker push $ECR_KEYCLOAK:latest
+
+# Force ECS to pull new images
+aws ecs update-service --cluster spree-cluster --service spree-backend --force-new-deployment
+aws ecs update-service --cluster spree-cluster --service spree-keycloak --force-new-deployment
+```
+
+### 3. Deploy Frontend
+
+The Angular production build needs the CloudFront domain baked in:
+
+```bash
+CF_DOMAIN=$(terraform -chdir=terraform output -raw cloudfront_url)
+SPA_BUCKET=$(terraform -chdir=terraform output -raw spa_bucket)
+CF_DIST_ID=$(terraform -chdir=terraform output -raw cloudfront_distribution_id)
+
+# Edit frontend/src/environments/environment.prod.ts:
+#   - authority: "https://<CF_DOMAIN>/realms/spree"
+#   - redirectUrl: "https://<CF_DOMAIN>"
+#   - googleMapsApiKey: your actual key
+
+cd frontend
+npm ci
+npm run build
+
+# Upload to S3
+aws s3 sync dist/spree/browser s3://$SPA_BUCKET/ --delete
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths "/*"
+```
+
+### 4. Post-Deploy: Update Keycloak Redirect URIs
+
+The Keycloak realm's `spree-frontend` client needs the CloudFront URL added as a valid redirect URI. Either:
+- Update `keycloak/spree-realm.json` before building the Keycloak image, or
+- Log into Keycloak admin console at `https://<cloudfront-domain>/admin/` and update the client settings
+
+### Tear Down
+
+```bash
+cd terraform
+terraform destroy
+```
+
+This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy` enabled, so they'll be deleted even if they contain objects.
 
 ## API Endpoints
 
@@ -190,12 +351,21 @@ App runs at `http://localhost:4200` (proxies `/api` → backend)
 spree/
 ├── backend/
 │   ├── .env.example
+│   ├── Dockerfile                         # Multi-stage Node 22 build
 │   ├── nest-cli.json
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
 │       ├── main.ts                        # Entry point + Swagger + CORS
 │       ├── app.module.ts                  # Root module
+│       ├── auth/                          # Keycloak OIDC auth
+│       │   ├── auth.module.ts             # Global JWT + roles guards
+│       │   ├── keycloak-jwt.strategy.ts   # Passport JWT with JWKS
+│       │   ├── keycloak-auth.guard.ts     # Auth guard (respects @Public)
+│       │   ├── roles.guard.ts             # Role-based access control
+│       │   ├── public.decorator.ts        # @Public() — skip auth
+│       │   ├── roles.decorator.ts         # @Roles('admin','organizer')
+│       │   └── current-user.decorator.ts  # @CurrentUser() param decorator
 │       ├── common/
 │       │   ├── dto/
 │       │   │   └── compute-spree.dto.ts   # Request validation
@@ -223,15 +393,15 @@ spree/
 │   ├── tsconfig.json
 │   ├── tsconfig.app.json
 │   └── src/
-│       ├── main.ts                        # Bootstrap
+│       ├── main.ts                        # Bootstrap + OIDC config
 │       ├── index.html                     # PWA meta, preconnects, boot loader
 │       ├── styles.css                     # Global CSS variables, dark mode, reset
 │       ├── manifest.webmanifest           # PWA manifest
 │       ├── assets/
 │       │   └── icon-192.svg              # App icon
 │       ├── environments/
-│       │   ├── environment.ts
-│       │   └── environment.prod.ts
+│       │   ├── environment.ts             # Dev (localhost Keycloak)
+│       │   └── environment.prod.ts        # Prod (CloudFront Keycloak)
 │       └── app/
 │           ├── app.component.ts           # Shell: splash, loading, legend, error
 │           ├── models/
@@ -251,6 +421,24 @@ spree/
 │               ├── settings-drawer/       # Right-side config drawer
 │               └── time-warning/          # Overflow warning banner
 │
+├── keycloak/
+│   ├── Dockerfile                         # Official Keycloak + realm import
+│   └── spree-realm.json                   # Realm config, clients, test users
+│
+├── terraform/
+│   ├── main.tf                            # AWS provider, locals
+│   ├── variables.tf                       # Input variables
+│   ├── outputs.tf                         # URLs, ECR repos, bucket name
+│   ├── vpc.tf                             # VPC, subnets, NAT, IGW
+│   ├── security.tf                        # Security groups
+│   ├── ecr.tf                             # ECR repositories
+│   ├── ecs.tf                             # ECS Fargate cluster + services
+│   ├── alb.tf                             # ALB + path-based routing
+│   ├── rds.tf                             # Postgres for Keycloak
+│   ├── ssm.tf                             # SSM secrets + random passwords
+│   └── s3-cloudfront.tf                   # S3 + CloudFront distribution
+│
+├── docker-compose.yml                     # Local: Keycloak + Backend + Postgres
 └── README.md
 ```
 
