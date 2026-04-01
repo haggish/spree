@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Spree — Event Route Planner</title>
+  <base href="/" />
+
+  <!-- Mobile viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="description" content="Plan your perfect event-hopping route across the city" />
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Spree" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎪</text></svg>" />
+
+  <!-- Preconnect to Google APIs for faster map loading -->
+  <link rel="preconnect" href="https://maps.googleapis.com" />
+  <link rel="preconnect" href="https://maps.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Preload display font -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" as="style" />
+</head>
+<body>
+  <app-root></app-root>
+
+  <!-- Inline critical loading indicator (before Angular boots) -->
+  <style>
+    app-root:empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      background: #f8fafc;
+      font-family: system-ui, sans-serif;
+    }
+    app-root:empty::after {
+      content: '🎪';
+      font-size: 48px;
+      animation: bootPulse 1.2s ease infinite;
+    }
+    @keyframes bootPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+    }
+    @media (prefers-color-scheme: dark) {
+      app-root:empty {
+        background: #0c0f1a;
+      }
+    }
+  </style>
+</body>
+</html>

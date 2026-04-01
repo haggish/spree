@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment secrets
+.env
+
+# IDE
+.idea/
+
+# Angular CLI cache
+.angular/
+
+# Logs
+*.log
+
+# Claude Code
+CLAUDE.md
+
+# OS files
+Thumbs.db
+.DS_Store

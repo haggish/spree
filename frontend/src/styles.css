@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════════
+   SPREE — Global Styles
+   Mobile-native event route planner
+   ═══════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  /* ── Colors ── */
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-faint: rgba(99, 102, 241, 0.08);
+  --accent-glow: rgba(99, 102, 241, 0.2);
+
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-dim: #f1f5f9;
+  --surface-elevated: #ffffff;
+  --border: #e2e8f0;
+
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* ── Typography ── */
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  /* ── Sizing ── */
+  --radius: 12px;
+  --radius-lg: 20px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Dark mode ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c0f1a;
+    --surface: #161b2e;
+    --surface-dim: #1e2540;
+    --surface-elevated: #1e2540;
+    --border: #2a3250;
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    --accent-faint: rgba(99, 102, 241, 0.12);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 32px rgba(99, 102, 241, 0.2);
+  }
+
+  /* Fix Google Maps info window in dark mode */
+  .gm-style .gm-style-iw-d {
+    background: #1e2540 !important;
+    color: #f1f5f9 !important;
+  }
+  .gm-style .gm-style-iw-tc::after {
+    background: #1e2540 !important;
+  }
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent overscroll bounce on mobile */
+  overscroll-behavior: none;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ── Focus ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse/touch users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Input resets ── */
+input, button, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Touch-friendly tap targets ── */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exception: small inline controls */
+.remove-btn, .stay-input, .legend-item, .chip-dot {
+  min-height: auto;
+  min-width: auto;
+}
+
+/* ── Mobile safe area ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .panel {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ── Number input: hide spinners ── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ── Global utility animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
