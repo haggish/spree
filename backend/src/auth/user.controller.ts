@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CurrentUser } from '../auth';
-import { AuthUser } from '../auth';
+import { CurrentUser } from './current-user.decorator';
+import { AuthUser } from './keycloak-jwt.strategy';
 
 @ApiTags('user')
 @ApiBearerAuth()
