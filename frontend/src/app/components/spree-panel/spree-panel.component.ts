@@ -4,12 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { SpreeStateService, AuthService, SavedSpreesApiService } from '../../services';
 import { RouteListComponent } from '../route-list/route-list.component';
 import { TimeWarningComponent } from '../time-warning/time-warning.component';
-import { DurationPipe } from '../../pipes/duration.pipe';
-
 @Component({
   selector: 'app-spree-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouteListComponent, TimeWarningComponent, DurationPipe],
+  imports: [CommonModule, FormsModule, RouteListComponent, TimeWarningComponent],
   template: `
     <div
       class="panel"

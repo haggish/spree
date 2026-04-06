@@ -1,0 +1,562 @@
+{
+  "29": {
+    "googlePlaceId": "ChIJFbS8uIBRqEcRVPsBJqgpdqU",
+    "name": "EBENSPERGER",
+    "formattedAddress": "Fichtestraße 6, 10967 Berlin, Deutschland",
+    "lat": 52.4902198,
+    "lng": 13.4129451,
+    "resolvedAt": "2026-04-06"
+  },
+  "38": {
+    "googlePlaceId": "ChIJ6bckE1FRqEcRJPgVdyMQlpk",
+    "name": "MOUNTAINS",
+    "formattedAddress": "Rosa-Luxemburg-Platz, Weydingerstraße 6, 10178 Berlin, Deutschland",
+    "lat": 52.5261413,
+    "lng": 13.4117642,
+    "resolvedAt": "2026-04-06"
+  },
+  "89": {
+    "googlePlaceId": "ChIJneqPDdZRqEcRg-l1epcCZGc",
+    "name": "Persons Projects",
+    "formattedAddress": "Lindenstraße 35, 10969 Berlin, Deutschland",
+    "lat": 52.5064504,
+    "lng": 13.3980369,
+    "resolvedAt": "2026-04-06"
+  },
+  "104": {
+    "googlePlaceId": "ChIJf0IMFcBbqEcRjp4sMx_ze-A",
+    "name": "Fluentum",
+    "formattedAddress": "Clayallee 174, 14195 Berlin, Deutschland",
+    "lat": 52.4513945,
+    "lng": 13.2739438,
+    "resolvedAt": "2026-04-06"
+  },
+  "123": {
+    "googlePlaceId": "ChIJPRnc7u9NqEcRO5DSW7HD0Vs",
+    "name": "SEXAUER Gallery",
+    "formattedAddress": "13086, Streustraße 90, 13086 Berlin, Deutschland",
+    "lat": 52.5509306,
+    "lng": 13.439443,
+    "resolvedAt": "2026-04-06"
+  },
+  "134": {
+    "googlePlaceId": "ChIJDWXAkNZRqEcRtuGDy6R6TKw",
+    "name": "Galerie Crone",
+    "formattedAddress": "Fasanenstraße 29, 10719 Berlin, Deutschland",
+    "lat": 52.5008497,
+    "lng": 13.3265131,
+    "resolvedAt": "2026-04-06"
+  },
+  "150": {
+    "googlePlaceId": "ChIJS6DmldtPqEcROPPC1TqRuDo",
+    "name": "Galerie im Saalbau",
+    "formattedAddress": "Karl-Marx-Straße 141, 12043 Berlin, Deutschland",
+    "lat": 52.4769521,
+    "lng": 13.4392198,
+    "resolvedAt": "2026-04-06"
+  },
+  "163": {
+    "googlePlaceId": "ChIJ7wvWwbVRqEcRhZv27v5NFjw",
+    "name": "St. Matthäus-Kirche",
+    "formattedAddress": "Matthäikirchplatz, 10785 Berlin, Deutschland",
+    "lat": 52.5081151,
+    "lng": 13.3675265,
+    "resolvedAt": "2026-04-06"
+  },
+  "189": {
+    "googlePlaceId": "ChIJo2jQUNFRqEcRVUugRhjlEfc",
+    "name": "alexander levy",
+    "formattedAddress": "Alt-Moabit 110, 10559 Berlin, Deutschland",
+    "lat": 52.52416179999999,
+    "lng": 13.3511109,
+    "resolvedAt": "2026-04-06"
+  },
+  "191": {
+    "googlePlaceId": "ChIJKe_wOjhQqEcR2kFAwRVfIJY",
+    "name": "Galerie Noah Klink",
+    "formattedAddress": "Kulmer Str. 17, 10783 Berlin, Deutschland",
+    "lat": 52.4925453,
+    "lng": 13.3648803,
+    "resolvedAt": "2026-04-06"
+  },
+  "216": {
+    "googlePlaceId": "ChIJbzlywORQqEcR4QHdrhPG35M",
+    "name": "Haverkampf Leistenschneider",
+    "formattedAddress": "Mommsenstraße 67, 10629 Berlin, Deutschland",
+    "lat": 52.5028599,
+    "lng": 13.3186718,
+    "resolvedAt": "2026-04-06"
+  },
+  "252": {
+    "googlePlaceId": "ChIJ4aZoouhRqEcRGCL_XK2dcCo",
+    "name": "DITTRICH & SCHLECHTRIEM Gallery",
+    "formattedAddress": "Linienstraße 40, 10119 Berlin, Deutschland",
+    "lat": 52.5283466,
+    "lng": 13.4098659,
+    "resolvedAt": "2026-04-06"
+  },
+  "260": {
+    "googlePlaceId": "ChIJs8-2M9xRqEcRU06ZH5xz0hE",
+    "name": "Contemporary Fine Arts Galerie",
+    "formattedAddress": "Grolmanstraße 32-33, 10623 Berlin, Deutschland",
+    "lat": 52.5037612,
+    "lng": 13.3236565,
+    "resolvedAt": "2026-04-06"
+  },
+  "309": {
+    "googlePlaceId": "ChIJQ9qJb9YjZUERR3RCAAAyYio",
+    "name": "Kunstverein am Rosa-Luxemburg-Platz e.V",
+    "formattedAddress": "Rosa-Luxemburg-Straße 45, 10178 Berlin, Deutschland",
+    "lat": 52.527212,
+    "lng": 13.4105222,
+    "resolvedAt": "2026-04-06"
+  },
+  "446": {
+    "googlePlaceId": "ChIJWX9OSPxQqEcRWHl_ySCJfqo",
+    "name": "Lars Friedrich",
+    "formattedAddress": "Kantstraße 154A, 10623 Berlin, Deutschland",
+    "lat": 52.5052734,
+    "lng": 13.3273588,
+    "resolvedAt": "2026-04-06"
+  },
+  "454": {
+    "googlePlaceId": "ChIJfbM6MJdRqEcRvquSQYgsyUo",
+    "name": "Edition Block GmbH",
+    "formattedAddress": "Prager Str. 5, 10779 Berlin, Deutschland",
+    "lat": 52.4944283,
+    "lng": 13.3344381,
+    "resolvedAt": "2026-04-06"
+  },
+  "492": {
+    "googlePlaceId": "ChIJ7fvVPP1QqEcRxDV8lDmiBaM",
+    "name": "Galerie Guido W. Baudach",
+    "formattedAddress": "Pohlstraße 67, 10785 Berlin, Deutschland",
+    "lat": 52.5007957,
+    "lng": 13.3629791,
+    "resolvedAt": "2026-04-06"
+  },
+  "518": {
+    "googlePlaceId": "ChIJSQ-zTExOqEcRdy187usHlS4",
+    "name": "Laura Mars Gallery",
+    "formattedAddress": "Bülowstraße 52, 10783 Berlin, Deutschland",
+    "lat": 52.4944062,
+    "lng": 13.3671119,
+    "resolvedAt": "2026-04-06"
+  },
+  "524": {
+    "googlePlaceId": "ChIJ4xB59MlRqEcRhrCyAKY0yWo",
+    "name": "Galerie Thomas Fischer",
+    "formattedAddress": "Mulackstraße 14, 10119 Berlin, Deutschland",
+    "lat": 52.5275621,
+    "lng": 13.4050962,
+    "resolvedAt": "2026-04-06"
+  },
+  "530": {
+    "googlePlaceId": "ChIJVQWr0DlQqEcR_v3cdqK1Y84",
+    "name": "Future Gallery",
+    "formattedAddress": "Schöneberger Ufer 59, 10785 Berlin, Deutschland",
+    "lat": 52.50557,
+    "lng": 13.36593,
+    "resolvedAt": "2026-04-06"
+  },
+  "601": {
+    "googlePlaceId": "ChIJZ2fxYzJOqEcRd9KIsqBt-jw",
+    "name": "Soy Capitán",
+    "formattedAddress": "Lindenstraße 34, 10969 Berlin, Deutschland",
+    "lat": 52.5062455,
+    "lng": 13.3980465,
+    "resolvedAt": "2026-04-06"
+  },
+  "605": {
+    "googlePlaceId": "ChIJxf6NFelRqEcRYhnNZPur08M",
+    "name": "EIGEN+ART Lab",
+    "formattedAddress": "Torstraße 220, 10115 Berlin, Deutschland",
+    "lat": 52.5273683,
+    "lng": 13.3890744,
+    "resolvedAt": "2026-04-06"
+  },
+  "646": {
+    "googlePlaceId": "ChIJm1pkIrVRqEcRzmQ9I-urdxM",
+    "name": "Barbara Wien",
+    "formattedAddress": "Schöneberger Ufer 65, 10785 Berlin, Deutschland",
+    "lat": 52.505598,
+    "lng": 13.3651444,
+    "resolvedAt": "2026-04-06"
+  },
+  "652": {
+    "googlePlaceId": "ChIJ3e_aV-NQqEcRE34JgvsmT6g",
+    "name": "Galerie Max Hetzler",
+    "formattedAddress": "Bleibtreustraße 45, 10623 Berlin, Deutschland",
+    "lat": 52.5040061,
+    "lng": 13.3201515,
+    "resolvedAt": "2026-04-06"
+  },
+  "674": {
+    "googlePlaceId": "ChIJZ2fxYzJOqEcRp0tKYULAgY4",
+    "name": "Klemm's",
+    "formattedAddress": "Leipziger Str. 57/58, 10117 Berlin, Deutschland",
+    "lat": 52.51134,
+    "lng": 13.39724,
+    "resolvedAt": "2026-04-06"
+  },
+  "676": {
+    "googlePlaceId": "ChIJDwXHfeNQqEcRuz2M80wp72o",
+    "name": "Galerie Michael Haas",
+    "formattedAddress": "Niebuhrstraße 5, 10629 Berlin, Deutschland",
+    "lat": 52.5042923,
+    "lng": 13.3180894,
+    "resolvedAt": "2026-04-06"
+  },
+  "680": {
+    "googlePlaceId": "ChIJgUQJEDpOqEcR8Hi-PE81k2E",
+    "name": "PSM",
+    "formattedAddress": "Schöneberger Ufer 61, 10785 Berlin, Deutschland",
+    "lat": 52.50546929999999,
+    "lng": 13.3655458,
+    "resolvedAt": "2026-04-06"
+  },
+  "716": {
+    "googlePlaceId": "ChIJtdJzmMRRqEcRzN3lC3MlNaU",
+    "name": "Projektraum der Schering Stiftung",
+    "formattedAddress": "Unter den Linden 32-34, 10117 Berlin, Deutschland",
+    "lat": 52.5172232,
+    "lng": 13.387664,
+    "resolvedAt": "2026-04-06"
+  },
+  "720": {
+    "googlePlaceId": "ChIJG-nw2R1OqEcR4sBmtuJJ7zY",
+    "name": "BQ",
+    "formattedAddress": "Weydingerstraße 10, 10178 Berlin, Deutschland",
+    "lat": 52.5262418,
+    "lng": 13.4122295,
+    "resolvedAt": "2026-04-06"
+  },
+  "724": {
+    "googlePlaceId": "ChIJee8VG0pQqEcRPszwZGTc_x0",
+    "name": "Tanya Leighton",
+    "formattedAddress": "Kurfürstenstraße 25, 10785 Berlin, Deutschland",
+    "lat": 52.4996453,
+    "lng": 13.3644027,
+    "resolvedAt": "2026-04-06"
+  },
+  "728": {
+    "googlePlaceId": "ChIJz5Btzk1OqEcRQqysfK3BT6g",
+    "name": "ChertLüdde",
+    "formattedAddress": "Hauptstraße 18, 10827 Berlin, Deutschland",
+    "lat": 52.4868543,
+    "lng": 13.3566569,
+    "resolvedAt": "2026-04-06"
+  },
+  "741": {
+    "googlePlaceId": "ChIJUZmPadFRqEcRV7H-jV4AYDY",
+    "name": "daadgalerie",
+    "formattedAddress": "Oranienstraße 161, 10969 Berlin, Deutschland",
+    "lat": 52.5026713,
+    "lng": 13.4137925,
+    "resolvedAt": "2026-04-06"
+  },
+  "745": {
+    "googlePlaceId": "ChIJg5wUKw9RqEcRAFDAFV5nJTs",
+    "name": "Meyer Riegger",
+    "formattedAddress": "Schaperstraße 14, 10719 Berlin, Deutschland",
+    "lat": 52.49977269999999,
+    "lng": 13.3304969,
+    "resolvedAt": "2026-04-06"
+  },
+  "763": {
+    "googlePlaceId": "ChIJARSEhzVOqEcRW4zwjp47svY",
+    "name": "KWADRAT",
+    "formattedAddress": "Reichenberger Str. 125 / HH, 10999 Berlin, Deutschland",
+    "lat": 52.4956892,
+    "lng": 13.4314867,
+    "resolvedAt": "2026-04-06"
+  },
+  "767": {
+    "googlePlaceId": "ChIJYWKRS2JbqEcRPyM2F2cr98I",
+    "name": "Galerie Bastian",
+    "formattedAddress": "Taylorstraße 1, 14195 Berlin, Deutschland",
+    "lat": 52.4539092,
+    "lng": 13.2716992,
+    "resolvedAt": "2026-04-06"
+  },
+  "771": {
+    "googlePlaceId": "ChIJI6YCK5RRqEcRVycsbAQiufY",
+    "name": "LOOCK Galerie",
+    "formattedAddress": "Ackerstraße 171, 10115 Berlin, Deutschland",
+    "lat": 52.5295737,
+    "lng": 13.3971966,
+    "resolvedAt": "2026-04-06"
+  },
+  "777": {
+    "googlePlaceId": "ChIJzzpxzBdOqEcRhqJsATMSiME",
+    "name": "Capitain Petzel",
+    "formattedAddress": "Karl-Marx-Allee 45, 10178 Berlin, Deutschland",
+    "lat": 52.519764,
+    "lng": 13.4252704,
+    "resolvedAt": "2026-04-06"
+  },
+  "817": {
+    "googlePlaceId": "ChIJj4Smiz1OqEcRGwoADNFPJ1Q",
+    "name": "haubrok foundation",
+    "formattedAddress": "Herzbergstraße 40–43, 10365 Berlin, Deutschland",
+    "lat": 52.5256936,
+    "lng": 13.4935287,
+    "resolvedAt": "2026-04-06"
+  },
+  "823": {
+    "googlePlaceId": "ChIJ5ypZHf5QqEcRkB1wDyXKAyI",
+    "name": "Helmut Newton Stiftung",
+    "formattedAddress": "Im Museum für Fotografie, Jebensstraße 2, 10623 Berlin, Deutschland",
+    "lat": 52.508155,
+    "lng": 13.3321309,
+    "resolvedAt": "2026-04-06"
+  },
+  "867": {
+    "googlePlaceId": "ChIJFco0TdFRqEcRi_9buJpkR10",
+    "name": "Buchmann Galerie Berlin",
+    "formattedAddress": "Charlottenstraße 13, 10969 Berlin, Deutschland",
+    "lat": 52.5072505,
+    "lng": 13.3926584,
+    "resolvedAt": "2026-04-06"
+  },
+  "869": {
+    "googlePlaceId": "ChIJDTmCPbVRqEcRAgb9ck5DLgU",
+    "name": "Galerie Isabella Bortolozzi",
+    "formattedAddress": "Schöneberger Ufer 61, 10785 Berlin, Deutschland",
+    "lat": 52.5054896,
+    "lng": 13.3655439,
+    "resolvedAt": "2026-04-06"
+  },
+  "883": {
+    "googlePlaceId": "ChIJNRqweCpOqEcR9Wab9cvf6lc",
+    "name": "Berlinische Galerie",
+    "formattedAddress": "Alte Jakobstraße 124-128, 10969 Berlin, Deutschland",
+    "lat": 52.5036683,
+    "lng": 13.3981882,
+    "resolvedAt": "2026-04-06"
+  },
+  "891": {
+    "googlePlaceId": "ChIJcXpe0jlQqEcRecEwV1LuCes",
+    "name": "Zwinger Galerie",
+    "formattedAddress": "Mansteinstraße 5, 10783 Berlin, Deutschland",
+    "lat": 52.4925003,
+    "lng": 13.3665592,
+    "resolvedAt": "2026-04-06"
+  },
+  "895": {
+    "googlePlaceId": "ChIJaR0qd9FRqEcRCGEbh2B7vmQ",
+    "name": "Trautwein Herleth",
+    "formattedAddress": "Regina-Jonas-Str. 41/43, 10999 Berlin, Deutschland",
+    "lat": 52.4967395,
+    "lng": 13.4186723,
+    "resolvedAt": "2026-04-06"
+  },
+  "907": {
+    "googlePlaceId": "ChIJaR0qd9FRqEcRLXE0GNDTrms",
+    "name": "Galerie Nordenhake GmbH",
+    "formattedAddress": "Lindenstraße 34, 10969 Berlin, Deutschland",
+    "lat": 52.5062407,
+    "lng": 13.3979809,
+    "resolvedAt": "2026-04-06"
+  },
+  "927": {
+    "googlePlaceId": "ChIJ3e_aV-NQqEcRE34JgvsmT6g",
+    "name": "Galerie Max Hetzler",
+    "formattedAddress": "Bleibtreustraße 45, 10623 Berlin, Deutschland",
+    "lat": 52.5040061,
+    "lng": 13.3201515,
+    "resolvedAt": "2026-04-06"
+  },
+  "929": {
+    "googlePlaceId": "ChIJ3e_aV-NQqEcRE34JgvsmT6g",
+    "name": "Galerie Max Hetzler",
+    "formattedAddress": "Bleibtreustraße 45, 10623 Berlin, Deutschland",
+    "lat": 52.5040061,
+    "lng": 13.3201515,
+    "resolvedAt": "2026-04-06"
+  },
+  "941": {
+    "googlePlaceId": "ChIJISZBUvdRqEcRdk6alH4K4FQ",
+    "name": "Galerie Diehl GmbH",
+    "formattedAddress": "Niebuhrstraße 2, 10629 Berlin, Deutschland",
+    "lat": 52.5042373,
+    "lng": 13.3187445,
+    "resolvedAt": "2026-04-06"
+  },
+  "975": {
+    "googlePlaceId": "ChIJT2KfI9RRqEcR2H4RT-imzng",
+    "name": "carlier | gebauer",
+    "formattedAddress": "Markgrafenstraße 67, 10969 Berlin, Deutschland",
+    "lat": 52.5059645,
+    "lng": 13.3940505,
+    "resolvedAt": "2026-04-06"
+  },
+  "13849": {
+    "googlePlaceId": "ChIJMxfF9y1OqEcRkF-iP-l71nU",
+    "name": "Galerie Russi Klenner",
+    "formattedAddress": "Luckauer Str. 16, 10969 Berlin, Deutschland",
+    "lat": 52.503245,
+    "lng": 13.4133826,
+    "resolvedAt": "2026-04-06"
+  },
+  "15586": {
+    "googlePlaceId": "ChIJNfwx4flQqEcR3RhJ39LI9NQ",
+    "name": "Galerie Friese",
+    "formattedAddress": "Meierottostraße 1, 10719 Berlin, Deutschland",
+    "lat": 52.4979568,
+    "lng": 13.3274916,
+    "resolvedAt": "2026-04-06"
+  },
+  "20089": {
+    "googlePlaceId": "ChIJvSgke0dRqEcR1q6qwJgzRnE",
+    "name": "Scherben",
+    "formattedAddress": "Leipziger Str. 61, 10117 Berlin, Deutschland",
+    "lat": 52.5112065,
+    "lng": 13.395254,
+    "resolvedAt": "2026-04-06"
+  },
+  "20964": {
+    "googlePlaceId": "ChIJu5aRoiFRqEcRY8A7drSF9qk",
+    "name": "CCA Berlin – Center for Contemporary Arts",
+    "formattedAddress": "Breitscheidplatz, 10789 Berlin, Deutschland",
+    "lat": 52.5049651,
+    "lng": 13.3341752,
+    "resolvedAt": "2026-04-06"
+  },
+  "23742": {
+    "googlePlaceId": "ChIJo2jQUNFRqEcRVUugRhjlEfc",
+    "name": "alexander levy",
+    "formattedAddress": "Alt-Moabit 110, 10559 Berlin, Deutschland",
+    "lat": 52.52416179999999,
+    "lng": 13.3511109,
+    "resolvedAt": "2026-04-06"
+  },
+  "24068": {
+    "googlePlaceId": "ChIJDbQebNdPqEcR4II9mOmcyD4",
+    "name": "Galerie kajetan",
+    "formattedAddress": "Grolmanstraße 58, 10623 Berlin, Deutschland",
+    "lat": 52.50848689999999,
+    "lng": 13.3207441,
+    "resolvedAt": "2026-04-06"
+  },
+  "24146": {
+    "googlePlaceId": "ChIJf21rg8hRqEcRhl0SwcHdS38",
+    "name": "Louche Ops",
+    "formattedAddress": "Viktoria-Luise-Platz 6, 10777 Berlin, Deutschland",
+    "lat": 52.4961143,
+    "lng": 13.3412049,
+    "resolvedAt": "2026-04-06"
+  },
+  "24946": {
+    "googlePlaceId": "ChIJa_0orn9RqEcR57nVCS4KOUw",
+    "name": "SETAREH Berlin",
+    "formattedAddress": "Schöneberger Ufer 71, 10785 Berlin, Deutschland",
+    "lat": 52.50546000000001,
+    "lng": 13.36426,
+    "resolvedAt": "2026-04-06"
+  },
+  "25023": {
+    "googlePlaceId": "ChIJxz_zVN5RqEcRfQq6iqn20JY",
+    "name": "Galerie Molitor",
+    "formattedAddress": "Kurfürstenstraße 143, 10785 Berlin, Deutschland",
+    "lat": 52.5004256,
+    "lng": 13.359906,
+    "resolvedAt": "2026-04-06"
+  },
+  "28382": {
+    "googlePlaceId": "ChIJL5gWrkpQqEcRtZUqosP7XM4",
+    "name": "Dorothée Nilsson Gallery",
+    "formattedAddress": "Potsdamer Str. 65, 10785 Berlin, Deutschland",
+    "lat": 52.5036143,
+    "lng": 13.3664664,
+    "resolvedAt": "2026-04-06"
+  },
+  "28462": {
+    "googlePlaceId": "ChIJLZNrvrdRqEcRQ61hKb1E2Eo",
+    "name": "max goelitz",
+    "formattedAddress": "Rudi-Dutschke-Straße 26, 10969 Berlin, Deutschland",
+    "lat": 52.50688940000001,
+    "lng": 13.3914886,
+    "resolvedAt": "2026-04-06"
+  },
+  "29357": {
+    "googlePlaceId": "ChIJeQEQO61RqEcRpTRiQX3Df4g",
+    "name": "Galerie Georg Nothelfer",
+    "formattedAddress": "Corneliusstraße 3, 10787 Berlin, Deutschland",
+    "lat": 52.5067142,
+    "lng": 13.3505669,
+    "resolvedAt": "2026-04-06"
+  },
+  "29450": {
+    "googlePlaceId": "ChIJxT5S-pFRqEcRMU4IwSnqYY4",
+    "name": "Shahin Zarinbal",
+    "formattedAddress": "Muskauer Str. 24/2. HH, 3 OG, 10997 Berlin, Deutschland",
+    "lat": 52.5030909,
+    "lng": 13.4272424,
+    "resolvedAt": "2026-04-06"
+  },
+  "31069": {
+    "googlePlaceId": "ChIJ8c54BABRqEcRxCJVXhLbS4A",
+    "name": "KIF (Kunst im Fenster)",
+    "formattedAddress": "Schaperstraße 11, 10719 Berlin, Deutschland",
+    "lat": 52.4996162,
+    "lng": 13.331955,
+    "resolvedAt": "2026-04-06"
+  },
+  "31967": {
+    "googlePlaceId": "ChIJbQb5X_1RqEcRhLjLLOaEFQ0",
+    "name": "Office Impart",
+    "formattedAddress": "Waldenserstraße 2-4, 10551 Berlin, Deutschland",
+    "lat": 52.5292867,
+    "lng": 13.33714,
+    "resolvedAt": "2026-04-06"
+  },
+  "32626": {
+    "googlePlaceId": "ChIJKZ_-44BRqEcRTT6O2OUYUyM",
+    "name": "Galerie Anton Janizewski",
+    "formattedAddress": "Weydingerstraße 10, 10178 Berlin, Deutschland",
+    "lat": 52.5262418,
+    "lng": 13.4122295,
+    "resolvedAt": "2026-04-06"
+  },
+  "34971": {
+    "googlePlaceId": "ChIJn6T3TgBRqEcRGZ8VjeNFxI8",
+    "name": "KOW",
+    "formattedAddress": "Frobenstraße 1, 10783 Berlin, Deutschland",
+    "lat": 52.50008800000001,
+    "lng": 13.3598222,
+    "resolvedAt": "2026-04-06"
+  },
+  "37225": {
+    "googlePlaceId": "ChIJ2z61iBBRqEcR6vhd64cuwpA",
+    "name": "Galerie Robert Grunenberg",
+    "formattedAddress": "Kantstraße 147, 10623 Berlin, Deutschland",
+    "lat": 52.5055496,
+    "lng": 13.3239987,
+    "resolvedAt": "2026-04-06"
+  },
+  "38393": {
+    "googlePlaceId": "ChIJI3gaLraPsUcRSTuO1U2Q3EE",
+    "name": "Galerie Kai Erdmann",
+    "formattedAddress": "Schweidnitzer Str. 17, 10709 Berlin, Deutschland",
+    "lat": 52.4950698,
+    "lng": 13.2980357,
+    "resolvedAt": "2026-04-06"
+  },
+  "38733": {
+    "googlePlaceId": "ChIJJyYDHXJRqEcRGQzceHncdGo",
+    "name": "Nizza Berlin",
+    "formattedAddress": "Schweidnitzer Str. 17, 10709 Berlin, Deutschland",
+    "lat": 52.4950698,
+    "lng": 13.2980357,
+    "resolvedAt": "2026-04-06"
+  },
+  "39777": {
+    "googlePlaceId": "ChIJ6ebLSo1RqEcRA2jFUm_OKCw",
+    "name": "Galerie Max Mayer",
+    "formattedAddress": "Hardenbergstraße 9a, 10623 Berlin, Deutschland",
+    "lat": 52.5096701,
+    "lng": 13.324643,
+    "resolvedAt": "2026-04-06"
+  }
+}

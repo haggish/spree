@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Event, EventWithVenue, EventGroupSummary, EventGroup } from '../common/interfaces';
 import { VenuesService } from '../venues/venues.service';
+import { IndexBerlinService } from '../index-berlin/index-berlin.service';
 
 interface EventGroupData {
   id: string;
@@ -182,7 +183,10 @@ export class EventGroupsService {
     },
   ];
 
-  constructor(private readonly venuesService: VenuesService) {}
+  constructor(
+    private readonly venuesService: VenuesService,
+    @Optional() private readonly indexBerlin?: IndexBerlinService,
+  ) {}
 
   private resolveVenues(events: Event[]): EventWithVenue[] {
     return events
@@ -230,11 +234,23 @@ export class EventGroupsService {
     };
   }
 
-  findAll(): EventGroupSummary[] {
-    return this.groups.map((g) => this.computeSummary(g));
+  async findAll(): Promise<EventGroupSummary[]> {
+    const staticGroups = this.groups.map((g) => this.computeSummary(g));
+    if (this.indexBerlin) {
+      try {
+        const ibSummary = await this.indexBerlin.getSummary();
+        return [...staticGroups, ibSummary];
+      } catch {
+        // If Index Berlin scraping fails, return static groups only
+      }
+    }
+    return staticGroups;
   }
 
-  findById(id: string): EventGroup | undefined {
+  async findById(id: string): Promise<EventGroup | undefined> {
+    if (this.indexBerlin && id === this.indexBerlin.groupId) {
+      return this.indexBerlin.getEventGroup();
+    }
     const group = this.groups.find((g) => g.id === id);
     if (!group) return undefined;
     return {
@@ -244,7 +260,14 @@ export class EventGroupsService {
     };
   }
 
-  findByIdAtDate(id: string, date: string): EventGroup | undefined {
+  async findByIdAtDate(id: string, date: string): Promise<EventGroup | undefined> {
+    if (this.indexBerlin && id === this.indexBerlin.groupId) {
+      const full = await this.indexBerlin.getEventGroup();
+      return {
+        ...full,
+        events: full.events.filter((e) => this.localDate(e.startTime) === date),
+      };
+    }
     const group = this.groups.find((g) => g.id === id);
     if (!group) return undefined;
     const filtered = group.events.filter((e) => this.localDate(e.startTime) === date);
