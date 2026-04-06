@@ -5,13 +5,15 @@ import { SpreePanelComponent } from './components/spree-panel/spree-panel.compon
 import { SettingsDrawerComponent } from './components/settings-drawer/settings-drawer.component';
 import { AuthChipComponent } from './components/auth-chip/auth-chip.component';
 import { SavedSpreesDrawerComponent } from './components/saved-sprees-drawer/saved-sprees-drawer.component';
-import { EventsApiService, SpreeStateService, AuthService } from './services';
+import { FormsModule } from '@angular/forms';
+import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService } from './services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MapComponent,
     SpreePanelComponent,
     SettingsDrawerComponent,
@@ -53,11 +55,17 @@ import { EventsApiService, SpreeStateService, AuthService } from './services';
           <span class="logo-text">Spree</span>
         </div>
 
-        <!-- Event count chip -->
-        @if (state.allEvents().length > 0) {
-          <div class="event-chip">
-            <span class="chip-dot"></span>
-            {{ state.allEvents().length }} events
+        <!-- Event group selector -->
+        @if (state.eventGroups().length > 0) {
+          <div class="group-select-wrapper">
+            <select
+              [ngModel]="state.selectedGroupId()"
+              (ngModelChange)="onGroupChange($event)">
+              <option [ngValue]="null" disabled>Choose event group…</option>
+              @for (group of state.eventGroups(); track group.id) {
+                <option [ngValue]="group.id">{{ group.name }} ({{ group.eventCount }})</option>
+              }
+            </select>
           </div>
         }
 
@@ -79,7 +87,7 @@ import { EventsApiService, SpreeStateService, AuthService } from './services';
       @if (eventsError()) {
         <div class="events-error-bar">
           <span>⚠️ {{ eventsError() }}</span>
-          <button class="retry-btn" (click)="loadEvents()">Retry</button>
+          <button class="retry-btn" (click)="loadGroups()">Retry</button>
         </div>
       }
 
@@ -163,25 +171,29 @@ import { EventsApiService, SpreeStateService, AuthService } from './services';
       color: var(--accent);
       letter-spacing: -0.03em;
     }
-    .event-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .group-select-wrapper {
+      pointer-events: auto;
+      animation: fadeSlideIn 0.4s ease;
+    }
+    .group-select-wrapper select {
       padding: 6px 14px;
       background: var(--surface);
+      border: 1px solid var(--border, rgba(0,0,0,0.1));
       border-radius: 100px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       font-size: 12px;
       font-weight: 600;
       color: var(--text-secondary);
-      pointer-events: auto;
-      animation: fadeSlideIn 0.4s ease;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      padding-right: 28px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
     }
-    .chip-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s ease infinite;
+    .group-select-wrapper select:focus {
+      border-color: var(--accent);
     }
 
     /* ── Map area ── */
@@ -334,7 +346,7 @@ import { EventsApiService, SpreeStateService, AuthService } from './services';
   `],
 })
 export class AppComponent implements OnInit {
-  private readonly eventsApi = inject(EventsApiService);
+  private readonly eventGroupsApi = inject(EventGroupsApiService);
   readonly state = inject(SpreeStateService);
   private readonly auth = inject(AuthService);
 
@@ -346,24 +358,49 @@ export class AppComponent implements OnInit {
     // Initialize OIDC auth (handles callback if returning from Keycloak)
     await this.auth.init();
 
-    // Load events (public — no auth required)
-    this.loadEvents();
+    // Load event groups (public — no auth required)
+    this.loadGroups();
   }
 
-  loadEvents(): void {
+  loadGroups(): void {
     this.eventsLoading.set(true);
     this.eventsError.set(null);
 
-    this.eventsApi.getAll().subscribe({
-      next: (events) => {
-        this.state.setEvents(events);
-        this.eventsLoading.set(false);
+    this.eventGroupsApi.getAll().subscribe({
+      next: (groups) => {
+        this.state.setEventGroups(groups);
+        // Auto-select the first group
+        if (groups.length > 0) {
+          this.loadGroup(groups[0].id);
+        } else {
+          this.eventsLoading.set(false);
+        }
       },
-      error: (err) => {
-        this.eventsError.set('Could not load events. Check your connection.');
+      error: () => {
+        this.eventsError.set('Could not load event groups. Check your connection.');
         this.eventsLoading.set(false);
       },
     });
+  }
+
+  loadGroup(groupId: string): void {
+    this.eventsLoading.set(true);
+    this.eventsError.set(null);
+
+    this.eventGroupsApi.getById(groupId).subscribe({
+      next: (group) => {
+        this.state.setEventsFromGroup(group);
+        this.eventsLoading.set(false);
+      },
+      error: () => {
+        this.eventsError.set('Could not load event group.');
+        this.eventsLoading.set(false);
+      },
+    });
+  }
+
+  onGroupChange(groupId: string): void {
+    this.loadGroup(groupId);
   }
 
   dismissSplash(): void {

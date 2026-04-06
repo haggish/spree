@@ -1,6 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import {
   EventWithVenue,
+  EventGroupSummary,
+  EventGroup,
   SpreeSelection,
   SpreeConfig,
   SpreePlan,
@@ -22,6 +24,10 @@ export class SpreeStateService {
     travelMode: 'DRIVE',
     strategy: 'greedy',
   });
+
+  // ── Event groups ──
+  readonly eventGroups = signal<EventGroupSummary[]>([]);
+  readonly selectedGroupId = signal<string | null>(null);
 
   // ── All events loaded from backend ──
   readonly allEvents = signal<EventWithVenue[]>([]);
@@ -96,6 +102,37 @@ export class SpreeStateService {
 
   setEvents(events: EventWithVenue[]): void {
     this.allEvents.set(events);
+  }
+
+  setEventGroups(groups: EventGroupSummary[]): void {
+    this.eventGroups.set(groups);
+  }
+
+  setEventsFromGroup(group: EventGroup): void {
+    this.allEvents.set(group.events);
+    this.selectedGroupId.set(group.id);
+    this.clearSelections();
+
+    if (group.events.length > 0) {
+      const starts = group.events.map((e) => new Date(e.startTime).getTime());
+      const ends = group.events.map((e) => new Date(e.endTime).getTime());
+      const earliest = new Date(Math.min(...starts));
+      const latest = new Date(Math.max(...ends));
+      // Preserve the original timezone offset from the first event's startTime
+      const offsetMatch = group.events[0].startTime.match(/[+-]\d{2}:\d{2}$/);
+      const offset = offsetMatch ? offsetMatch[0] : '+02:00';
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const toLocal = (d: Date) => {
+        // Format as ISO with the group's timezone offset
+        const tzOffsetMinutes = offset.startsWith('-')
+          ? -(parseInt(offset.slice(1, 3)) * 60 + parseInt(offset.slice(4)))
+          : parseInt(offset.slice(1, 3)) * 60 + parseInt(offset.slice(4));
+        const utc = d.getTime();
+        const local = new Date(utc + tzOffsetMinutes * 60000);
+        return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}${offset}`;
+      };
+      this.updateConfig({ startTime: toLocal(earliest), endTime: toLocal(latest) });
+    }
   }
 
   clearPlan(): void {

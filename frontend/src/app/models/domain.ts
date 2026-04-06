@@ -87,6 +87,22 @@ export interface SpreePlan {
   skippedEvents: SkippedEvent[];
 }
 
+// ── Event group summary (for listing) ──
+export interface EventGroupSummary {
+  id: string;
+  name: string;
+  eventCount: number;
+  earliestStart: string;
+  latestEnd: string;
+}
+
+// ── Event group with resolved events ──
+export interface EventGroup {
+  id: string;
+  name: string;
+  events: EventWithVenue[];
+}
+
 // ── Request body to compute a spree ──
 export interface ComputeSpreeRequest {
   homeLocation: LatLng;

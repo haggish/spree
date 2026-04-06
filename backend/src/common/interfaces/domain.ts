@@ -87,6 +87,22 @@ export interface SpreeLeg {
   exceedsWindow: boolean;     // true if this leg departs after spree end time
 }
 
+// ── Event group summary (for listing) ──
+export interface EventGroupSummary {
+  id: string;
+  name: string;
+  eventCount: number;
+  earliestStart: string; // ISO 8601
+  latestEnd: string;     // ISO 8601
+}
+
+// ── Event group with resolved events ──
+export interface EventGroup {
+  id: string;
+  name: string;
+  events: EventWithVenue[];
+}
+
 // ── Google Routes API types (subset we use) ──
 export declare namespace google.maps {
   enum TravelMode {
