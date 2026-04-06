@@ -15,9 +15,20 @@ export class EventGroupsController {
     return this.eventGroupsService.findAll();
   }
 
+  @Get(':id/at/:date')
+  @Public()
+  @ApiOperation({ summary: 'Get event group filtered by date (YYYY-MM-DD) (public)' })
+  findByIdAtDate(@Param('id') id: string, @Param('date') date: string) {
+    const group = this.eventGroupsService.findByIdAtDate(id, date);
+    if (!group) {
+      throw new NotFoundException(`Event group "${id}" not found`);
+    }
+    return group;
+  }
+
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Get event group with events (public)' })
+  @ApiOperation({ summary: 'Get event group with all events (public)' })
   findById(@Param('id') id: string) {
     const group = this.eventGroupsService.findById(id);
     if (!group) {

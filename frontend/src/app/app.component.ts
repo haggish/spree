@@ -55,7 +55,7 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
           <span class="logo-text">Spree</span>
         </div>
 
-        <!-- Event group selector -->
+        <!-- Event group selector + date picker -->
         @if (state.eventGroups().length > 0) {
           <div class="group-select-wrapper">
             <select
@@ -66,6 +66,12 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
                 <option [ngValue]="group.id">{{ group.name }} ({{ group.eventCount }})</option>
               }
             </select>
+          </div>
+          <div class="date-picker-wrapper">
+            <input
+              type="date"
+              [ngModel]="state.selectedDate()"
+              (ngModelChange)="onDateChange($event)" />
           </div>
         }
 
@@ -193,6 +199,25 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
       background-position: right 12px center;
     }
     .group-select-wrapper select:focus {
+      border-color: var(--accent);
+    }
+    .date-picker-wrapper {
+      pointer-events: auto;
+      animation: fadeSlideIn 0.4s ease;
+    }
+    .date-picker-wrapper input[type="date"] {
+      padding: 6px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border, rgba(0,0,0,0.1));
+      border-radius: 100px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      outline: none;
+    }
+    .date-picker-wrapper input[type="date"]:focus {
       border-color: var(--accent);
     }
 
@@ -384,10 +409,11 @@ export class AppComponent implements OnInit {
   }
 
   loadGroup(groupId: string): void {
+    const date = this.state.selectedDate();
     this.eventsLoading.set(true);
     this.eventsError.set(null);
 
-    this.eventGroupsApi.getById(groupId).subscribe({
+    this.eventGroupsApi.getByIdAtDate(groupId, date).subscribe({
       next: (group) => {
         this.state.setEventsFromGroup(group);
         this.eventsLoading.set(false);
@@ -401,6 +427,14 @@ export class AppComponent implements OnInit {
 
   onGroupChange(groupId: string): void {
     this.loadGroup(groupId);
+  }
+
+  onDateChange(date: string): void {
+    this.state.selectedDate.set(date);
+    const groupId = this.state.selectedGroupId();
+    if (groupId) {
+      this.loadGroup(groupId);
+    }
   }
 
   dismissSplash(): void {

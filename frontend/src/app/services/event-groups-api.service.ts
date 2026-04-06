@@ -16,4 +16,8 @@ export class EventGroupsApiService {
   getById(id: string): Observable<EventGroup> {
     return this.http.get<EventGroup>(`${this.baseUrl}/${id}`);
   }
+
+  getByIdAtDate(id: string, date: string): Observable<EventGroup> {
+    return this.http.get<EventGroup>(`${this.baseUrl}/${id}/at/${date}`);
+  }
 }

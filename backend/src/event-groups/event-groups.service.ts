@@ -12,9 +12,10 @@ interface EventGroupData {
 export class EventGroupsService {
   private readonly groups: EventGroupData[] = [
     {
-      id: 'berlin-music-day-05-04-26',
+      id: 'berlin-music-day',
       name: 'Berlin Music Day',
       events: [
+        // ── April 5 ──
         {
           id: 'evt-001',
           name: 'Berlin Electronic Showcase',
@@ -69,12 +70,41 @@ export class EventGroupsService {
           startTime: '2026-04-05T20:00:00+02:00',
           endTime: '2026-04-05T23:00:00+02:00',
         },
+        // ── April 10 ──
+        {
+          id: 'evt-013',
+          name: 'Afrobeat Collective Live',
+          presenter: 'Sahara Groove',
+          description: 'High-energy Afrobeat with a 10-piece band straight from Lagos via Berlin.',
+          venueId: 'ven-007',
+          startTime: '2026-04-10T19:00:00+02:00',
+          endTime: '2026-04-10T23:00:00+02:00',
+        },
+        {
+          id: 'evt-014',
+          name: 'Vinyl Listening Session',
+          presenter: 'Schallplatten Klub',
+          description: 'Curated deep cuts on a world-class hi-fi system. Bring your own records.',
+          venueId: 'ven-004',
+          startTime: '2026-04-10T15:00:00+02:00',
+          endTime: '2026-04-10T18:00:00+02:00',
+        },
+        {
+          id: 'evt-015',
+          name: 'Electronic Ambient Night',
+          presenter: 'Klangwolke',
+          description: 'Immersive ambient electronics with spatial audio in a darkened hall.',
+          venueId: 'ven-006',
+          startTime: '2026-04-10T21:00:00+02:00',
+          endTime: '2026-04-11T01:00:00+02:00',
+        },
       ],
     },
     {
-      id: 'berlin-arts-culture-05-04-26',
+      id: 'berlin-arts-culture',
       name: 'Berlin Arts & Culture',
       events: [
+        // ── April 5 ──
         {
           id: 'evt-003',
           name: 'Contemporary Dance Festival',
@@ -129,6 +159,25 @@ export class EventGroupsService {
           startTime: '2026-04-05T14:00:00+02:00',
           endTime: '2026-04-05T16:30:00+02:00',
         },
+        // ── April 10 ──
+        {
+          id: 'evt-016',
+          name: 'Street Art Walking Tour',
+          presenter: 'Urban Canvas Berlin',
+          description: 'Guided walk through Kreuzberg\'s ever-changing murals and paste-ups.',
+          venueId: 'ven-004',
+          startTime: '2026-04-10T11:00:00+02:00',
+          endTime: '2026-04-10T13:30:00+02:00',
+        },
+        {
+          id: 'evt-017',
+          name: 'Improv Comedy Showdown',
+          presenter: 'Die Schnelldenker',
+          description: 'Unscripted chaos — audience suggestions drive every scene.',
+          venueId: 'ven-002',
+          startTime: '2026-04-10T20:00:00+02:00',
+          endTime: '2026-04-10T22:00:00+02:00',
+        },
       ],
     },
   ];
@@ -143,6 +192,27 @@ export class EventGroupsService {
         return { ...event, venue } as EventWithVenue;
       })
       .filter(Boolean) as EventWithVenue[];
+  }
+
+  /**
+   * Extract the local date (YYYY-MM-DD) from an ISO 8601 string,
+   * respecting the embedded timezone offset.
+   */
+  private localDate(iso: string): string {
+    // Match offset like +02:00 or -05:00
+    const offsetMatch = iso.match(/([+-])(\d{2}):(\d{2})$/);
+    if (!offsetMatch) {
+      // No offset — treat as UTC and take the date portion
+      return iso.slice(0, 10);
+    }
+    const sign = offsetMatch[1] === '+' ? 1 : -1;
+    const offsetMinutes = sign * (parseInt(offsetMatch[2]) * 60 + parseInt(offsetMatch[3]));
+    const utc = new Date(iso).getTime();
+    const local = new Date(utc + offsetMinutes * 60000);
+    const y = local.getUTCFullYear();
+    const m = String(local.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(local.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   private computeSummary(group: EventGroupData): EventGroupSummary {
@@ -171,6 +241,17 @@ export class EventGroupsService {
       id: group.id,
       name: group.name,
       events: this.resolveVenues(group.events),
+    };
+  }
+
+  findByIdAtDate(id: string, date: string): EventGroup | undefined {
+    const group = this.groups.find((g) => g.id === id);
+    if (!group) return undefined;
+    const filtered = group.events.filter((e) => this.localDate(e.startTime) === date);
+    return {
+      id: group.id,
+      name: group.name,
+      events: this.resolveVenues(filtered),
     };
   }
 

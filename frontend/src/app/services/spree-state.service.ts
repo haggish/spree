@@ -28,6 +28,7 @@ export class SpreeStateService {
   // ── Event groups ──
   readonly eventGroups = signal<EventGroupSummary[]>([]);
   readonly selectedGroupId = signal<string | null>(null);
+  readonly selectedDate = signal<string>(new Date().toISOString().slice(0, 10));
 
   // ── All events loaded from backend ──
   readonly allEvents = signal<EventWithVenue[]>([]);
