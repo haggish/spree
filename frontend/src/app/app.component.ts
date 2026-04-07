@@ -50,35 +50,37 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
 
       <!-- Top bar -->
       <header class="top-bar">
-        <div class="logo">
-          <span class="logo-icon">🎪</span>
-          <span class="logo-text">Spree</span>
+        <div class="top-bar-row1">
+          <div class="logo">
+            <span class="logo-icon">🎪</span>
+            <span class="logo-text">Spree</span>
+          </div>
+          <div class="top-bar-right">
+            <app-auth-chip />
+          </div>
         </div>
 
         <!-- Event group selector + date picker -->
         @if (state.eventGroups().length > 0) {
-          <div class="group-select-wrapper">
-            <select
-              [ngModel]="state.selectedGroupId()"
-              (ngModelChange)="onGroupChange($event)">
-              <option [ngValue]="null" disabled>Choose event group…</option>
-              @for (group of state.eventGroups(); track group.id) {
-                <option [ngValue]="group.id">{{ group.name }} ({{ group.eventCount }})</option>
-              }
-            </select>
-          </div>
-          <div class="date-picker-wrapper">
-            <input
-              type="date"
-              [ngModel]="state.selectedDate()"
-              (ngModelChange)="onDateChange($event)" />
+          <div class="top-bar-row2">
+            <div class="group-select-wrapper">
+              <select
+                [ngModel]="state.selectedGroupId()"
+                (ngModelChange)="onGroupChange($event)">
+                <option [ngValue]="null" disabled>Choose event group…</option>
+                @for (group of state.eventGroups(); track group.id) {
+                  <option [ngValue]="group.id">{{ group.name }} ({{ group.eventCount }})</option>
+                }
+              </select>
+            </div>
+            <div class="date-picker-wrapper">
+              <input
+                type="date"
+                [ngModel]="state.selectedDate()"
+                (ngModelChange)="onDateChange($event)" />
+            </div>
           </div>
         }
-
-        <!-- Auth chip (right side) -->
-        <div class="top-bar-right">
-          <app-auth-chip />
-        </div>
       </header>
 
       <!-- Loading overlay for events -->
@@ -151,13 +153,26 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
       z-index: 80;
       padding: 12px 16px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
       pointer-events: none;
     }
+    .top-bar-row1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
     .top-bar-right {
       margin-left: auto;
       pointer-events: auto;
+    }
+    .top-bar-row2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
     }
     .logo {
       display: flex;
@@ -168,6 +183,7 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
       border-radius: 100px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       pointer-events: auto;
+      flex-shrink: 0;
     }
     .logo-icon { font-size: 22px; }
     .logo-text {
@@ -180,8 +196,11 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
     .group-select-wrapper {
       pointer-events: auto;
       animation: fadeSlideIn 0.4s ease;
+      flex: 1;
+      min-width: 0;
     }
     .group-select-wrapper select {
+      width: 100%;
       padding: 6px 14px;
       background: var(--surface);
       border: 1px solid var(--border, rgba(0,0,0,0.1));
@@ -204,6 +223,7 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
     .date-picker-wrapper {
       pointer-events: auto;
       animation: fadeSlideIn 0.4s ease;
+      flex-shrink: 0;
     }
     .date-picker-wrapper input[type="date"] {
       padding: 6px 14px;
@@ -219,6 +239,19 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
     }
     .date-picker-wrapper input[type="date"]:focus {
       border-color: var(--accent);
+    }
+    /* On wider screens, put everything on one row */
+    @media (min-width: 600px) {
+      .top-bar-row1, .top-bar-row2 {
+        width: auto;
+      }
+      .top-bar-row2 {
+        flex: 1;
+        min-width: 0;
+      }
+      .top-bar-right {
+        margin-left: auto;
+      }
     }
 
     /* ── Map area ── */
@@ -257,7 +290,7 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
     /* ── Events loading bar ── */
     .events-loading-bar {
       position: fixed;
-      top: 64px;
+      top: 110px;
       left: 16px;
       right: 16px;
       z-index: 79;
@@ -284,7 +317,7 @@ import { EventsApiService, EventGroupsApiService, SpreeStateService, AuthService
     /* ── Events error bar ── */
     .events-error-bar {
       position: fixed;
-      top: 64px;
+      top: 110px;
       left: 16px;
       right: 16px;
       z-index: 79;

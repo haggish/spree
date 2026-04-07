@@ -197,6 +197,7 @@ export class AuthChipComponent {
     if (!p) return '?';
     const first = p.firstName?.charAt(0) || '';
     const last = p.lastName?.charAt(0) || '';
-    return (first + last).toUpperCase() || p.username.charAt(0).toUpperCase();
+    if (first || last) return (first + last).toUpperCase();
+    return p.username?.charAt(0)?.toUpperCase() || '?';
   }
 }

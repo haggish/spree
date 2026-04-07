@@ -1,6 +1,6 @@
-# 🎪 Spree — Event Route Planner
+# Spree — Event Route Planner
 
-A mobile-native application that plans optimized routes for visiting multiple events across a city. Select events on a map, configure your time window, and Spree computes the best route to visit them all.
+A mobile-native application that plans optimized walking/transit routes for visiting multiple events across Berlin. Select events on a map, configure your time window, and Spree computes the best route to visit them all.
 
 ## Architecture
 
@@ -17,10 +17,10 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 ┌──────────────▼──────────────────────┐
 │          NestJS Backend             │
 │  ┌──────────┬──────────┬─────────┐  │
-│  │ Events   │ Venues   │ Route   │  │
-│  │ Module   │ Module   │Optimizer│  │
+│  │ Event    │Index     │ Route   │  │
+│  │ Groups   │Berlin    │Optimizer│  │
 │  └──────────┴──────────┴─────────┘  │
-│  Google Routes API · JWT Auth       │
+│  Google Routes API · Places API     │
 └──────────────┬──────────────────────┘
                │ JWKS validation
 ┌──────────────▼──────────────────────┐
@@ -35,9 +35,10 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 - **Backend**: NestJS 11 (TypeScript, Swagger docs)
 - **Auth**: Keycloak 26 (OIDC, JWT, role-based access)
 - **Maps**: Google Maps JavaScript SDK (Advanced Markers, Geometry)
-- **Routing**: Google Routes API v2
-- **Places**: Google Places API (Place IDs)
-- **Infra**: Terraform (AWS ECS Fargate, S3, CloudFront, RDS, ALB)
+- **Routing**: Google Routes API v2 (walk + transit, per-leg mode selection)
+- **Places**: Google Places API (Find Place from Text, venue resolution)
+- **Data**: Index Berlin scraping (gallery openings, real venue data)
+- **Infra**: Docker Compose (local), Terraform (AWS ECS Fargate, S3, CloudFront, RDS, ALB)
 
 ## Prerequisites
 
@@ -47,7 +48,7 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 - Google Cloud project with these APIs enabled:
   - Maps JavaScript API
   - Routes API
-  - Places API
+  - Places API (Find Place from Text)
 
 ## Local Development
 
@@ -64,8 +65,8 @@ A mobile-native application that plans optimized routes for visiting multiple ev
 The quickest way to get the backend and Keycloak running:
 
 ```bash
-# Optional: provide a Google Maps API key (omit for mock routing)
-export GOOGLE_MAPS_API_KEY=your-key
+# Create .env in project root with your API key
+echo "GOOGLE_MAPS_API_KEY=your-key" > .env
 
 docker-compose up -d
 ```
@@ -108,7 +109,7 @@ npm run start:dev
 Server runs at `http://localhost:3000`
 Swagger docs at `http://localhost:3000/api/docs`
 
-> **No API key?** The backend falls back to haversine-based mock routing automatically.
+> **No API key?** The backend falls back to haversine-based mock routing and uses Index Berlin coordinates directly (without Google Place ID resolution).
 
 > **Keycloak required.** The backend validates JWTs against Keycloak. Run at minimum `docker-compose up -d keycloak keycloak-db` to have auth working.
 
@@ -122,128 +123,48 @@ npm install
 npm start
 ```
 
-App runs at `http://localhost:4200` (proxies `/api` → backend)
+App runs at `http://localhost:4200` (proxies `/api` to backend via `proxy.conf.json`)
 
-## AWS Deployment
+## Event Groups
 
-The `terraform/` directory contains infrastructure-as-code to deploy the full stack to AWS.
+Events are organized into **Event Groups**. The frontend shows a group selector dropdown and a date picker in the top bar.
 
-### Architecture
+### Static mock groups
 
-```
-CloudFront
-  ├── Default     → S3 (Angular SPA)
-  ├── /api/*      → ALB → ECS Fargate (Backend, port 3000)
-  └── /realms/*   → ALB → ECS Fargate (Keycloak, port 8080)
+Two built-in groups with hardcoded events:
+- **Berlin Music Day** — 9 music events across April 5 and April 10, 2026
+- **Berlin Arts & Culture** — 8 arts events across April 5 and April 10, 2026
 
-RDS Postgres (private subnets) ← Keycloak only
-```
+### Index Berlin (live scraping)
 
-All traffic goes through CloudFront (same-origin, no CORS issues). Backend and Keycloak run on ECS Fargate in private subnets behind an ALB. Keycloak's Postgres is on RDS.
+The backend scrapes real gallery opening data from [Index Berlin](https://www.indexberlin.com/):
+- **Venues** from `/venues/list/` — name, coordinates, Index Berlin ID
+- **Events (openings)** from `/events/list/filter?ty=12614` — title, venue reference, date, time
 
-### Prerequisites
+Scraped data is cached in memory for 1 hour (configurable via `INDEX_BERLIN_CACHE_TTL_MS` env var).
 
-- [Terraform](https://www.terraform.io/downloads) >= 1.5
-- [AWS CLI](https://aws.amazon.com/cli/) configured with credentials
-- Docker (for building and pushing images)
+### Venue resolution
 
-### 1. Provision Infrastructure
+Each venue is resolved to a **Google Place ID** via the Find Place from Text API. Results are cached persistently in `backend/data/venue-place-ids.json` — a venue is only resolved once, and the cache file can be committed to Git as a warm-start seed.
 
-```bash
-cd terraform
+## Travel Mode
 
-# Initialize Terraform
-terraform init
+Spree uses a **walk + transit hybrid**: for each leg of the route, both walking and transit routes are computed in parallel via Google Routes API, and the faster option is selected. This means:
 
-# Review the plan (you'll be prompted for your Google Maps API key)
-terraform plan
+- **Short distances** (~500m) typically use walking
+- **Longer distances** (~3km+) typically use transit (bus, tram, U-Bahn, S-Bahn)
 
-# Apply
-terraform apply
-```
+Transit legs include detailed information: line name (e.g. "M19", "U2"), transit type (bus/subway/tram/rail), and departure/arrival stop names.
 
-Terraform creates ~35 resources: VPC, subnets, NAT gateway, ALB, ECS cluster, RDS, S3 bucket, CloudFront distribution, ECR repos, and SSM secrets.
-
-Key outputs after apply:
-
-| Output | Description |
-|--------|-------------|
-| `cloudfront_url` | Main app URL |
-| `alb_url` | Direct ALB URL |
-| `ecr_backend_url` | ECR repo for backend image |
-| `ecr_keycloak_url` | ECR repo for Keycloak image |
-| `spa_bucket` | S3 bucket for frontend files |
-| `cloudfront_distribution_id` | For cache invalidation |
-
-### 2. Build & Push Docker Images
-
-```bash
-# Get output values
-REGION=$(terraform -chdir=terraform output -raw aws_region 2>/dev/null || echo "eu-central-1")
-ECR_BACKEND=$(terraform -chdir=terraform output -raw ecr_backend_url)
-ECR_KEYCLOAK=$(terraform -chdir=terraform output -raw ecr_keycloak_url)
-ACCOUNT=$(echo $ECR_BACKEND | cut -d. -f1)
-
-# Authenticate Docker to ECR
-aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT.dkr.ecr.$REGION.amazonaws.com
-
-# Build and push backend
-docker build -t $ECR_BACKEND:latest -f backend/Dockerfile backend/
-docker push $ECR_BACKEND:latest
-
-# Build and push Keycloak (with realm baked in)
-docker build -t $ECR_KEYCLOAK:latest -f keycloak/Dockerfile keycloak/
-docker push $ECR_KEYCLOAK:latest
-
-# Force ECS to pull new images
-aws ecs update-service --cluster spree-cluster --service spree-backend --force-new-deployment
-aws ecs update-service --cluster spree-cluster --service spree-keycloak --force-new-deployment
-```
-
-### 3. Deploy Frontend
-
-The Angular production build needs the CloudFront domain baked in:
-
-```bash
-CF_DOMAIN=$(terraform -chdir=terraform output -raw cloudfront_url)
-SPA_BUCKET=$(terraform -chdir=terraform output -raw spa_bucket)
-CF_DIST_ID=$(terraform -chdir=terraform output -raw cloudfront_distribution_id)
-
-# Edit frontend/src/environments/environment.prod.ts:
-#   - authority: "https://<CF_DOMAIN>/realms/spree"
-#   - redirectUrl: "https://<CF_DOMAIN>"
-#   - googleMapsApiKey: your actual key
-
-cd frontend
-npm ci
-npm run build
-
-# Upload to S3
-aws s3 sync dist/spree/browser s3://$SPA_BUCKET/ --delete
-
-# Invalidate CloudFront cache
-aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths "/*"
-```
-
-### 4. Post-Deploy: Update Keycloak Redirect URIs
-
-The Keycloak realm's `spree-frontend` client needs the CloudFront URL added as a valid redirect URI. Either:
-- Update `keycloak/spree-realm.json` before building the Keycloak image, or
-- Log into Keycloak admin console at `https://<cloudfront-domain>/admin/` and update the client settings
-
-### Tear Down
-
-```bash
-cd terraform
-terraform destroy
-```
-
-This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy` enabled, so they'll be deleted even if they contain objects.
+During route optimization (before real API calls), a hybrid speed model estimates travel times: walk speed for distances under 1km, transit speed + 5min overhead for longer distances.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/api/event-groups` | List all event groups (with summaries) |
+| GET | `/api/event-groups/:id` | Get event group with all events |
+| GET | `/api/event-groups/:id/at/:date` | Get event group filtered by date (YYYY-MM-DD) |
 | GET | `/api/venues` | List all venues |
 | GET | `/api/venues/:id` | Get venue by ID |
 | GET | `/api/events` | List all events (with venues) |
@@ -258,7 +179,6 @@ This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy`
   "homeLocation": { "lat": 52.52, "lng": 13.405 },
   "startTime": "2026-04-05T10:00:00+02:00",
   "endTime": "2026-04-05T22:00:00+02:00",
-  "travelMode": "DRIVE",
   "strategy": "greedy",
   "selections": [
     { "eventId": "evt-001", "stayMinutes": 15 },
@@ -276,7 +196,37 @@ This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy`
 
 ```json
 {
-  "legs": [...],
+  "legs": [
+    {
+      "order": 1,
+      "event": { "id": "...", "name": "...", "venue": { "..." } },
+      "travelFromPrevious": {
+        "travelMode": "WALK",
+        "durationSeconds": 420,
+        "distanceMeters": 580,
+        "transitDetails": null
+      },
+      "arrivalTime": "...",
+      "departureTime": "...",
+      "stayMinutes": 15
+    },
+    {
+      "order": 2,
+      "travelFromPrevious": {
+        "travelMode": "TRANSIT",
+        "durationSeconds": 780,
+        "distanceMeters": 3200,
+        "transitDetails": [
+          {
+            "transitType": "BUS",
+            "lineName": "M19",
+            "departureStop": "Mehringdamm",
+            "arrivalStop": "Kottbusser Tor"
+          }
+        ]
+      }
+    }
+  ],
   "stats": {
     "strategy": "greedy-nearest-time",
     "totalTravelMinutes": 42,
@@ -287,7 +237,7 @@ This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy`
   },
   "skippedEvents": [
     {
-      "event": { "id": "evt-009", "name": "...", "..." : "..." },
+      "event": { "id": "evt-009", "name": "..." },
       "reason": "Event ends before you could arrive"
     }
   ]
@@ -297,53 +247,46 @@ This removes all AWS resources. The S3 bucket and ECR repos have `force_destroy`
 ## Features
 
 ### Core
+- **Event Groups**: Organize events into named groups, selectable via dropdown
+- **Date Filtering**: Pick a date to see only events on that day
+- **Index Berlin Integration**: Real gallery opening data scraped from indexberlin.com
 - **Map View**: Interactive Google Map with Advanced Markers for event venues
 - **Time Filtering**: Events outside your spree window are grayed out and disabled
 - **Event Selection**: Tap markers to see details and add/remove from spree
 - **Configurable Stay**: Set how long to stay at each event (default 10 min)
-- **Route Computation**: Computes route via Google Routes API with encoded polylines
 
-### Route Optimization (Phase 4)
-- **Greedy Nearest-Time Algorithm**: Builds N×N travel matrix, scores candidates by `travel + 0.5×idle`, picks optimal next stop
-- **Strategy Toggle**: Switch between smart optimization and chronological order in settings
+### Route Planning
+- **Walk + Transit Hybrid**: Each leg automatically uses the faster of walking or transit
+- **Transit Details**: Line names (M19, U2), stop names, vehicle types per transit leg
+- **Greedy Nearest-Time Algorithm**: Builds N x N travel matrix, scores candidates by `travel + 0.5 x idle`, picks optimal next stop
+- **Strategy Toggle**: Switch between smart optimization and chronological order
 - **Skipped Events**: Events that can't be reached before they end are reported with reasons
 - **Optimization Stats**: Total travel, idle, and stay time breakdowns
 
-### Route Display (Phase 5)
+### Route Display
 - **Timeline View**: Visual timeline with numbered stops, travel segments, and idle wait indicators
+- **Transit Badges**: Blue pills showing bus/tram/subway line + departure/arrival stops
 - **Animated Polylines**: Route legs draw sequentially with staggered reveal
-- **Numbered Markers**: Map markers show route order (1, 2, 3…) after planning
+- **Numbered Markers**: Map markers show route order (1, 2, 3...) after planning
 - **Color-Coded**: Indigo for on-schedule, amber for over-time legs and markers
-- **Per-Leg Warnings**: Individual warning when a leg exceeds the spree end time
 
-### Mobile Native UX (Phase 6)
+### Mobile Native UX
 - **Splash Screen**: 3-step onboarding overlay on first launch
-- **Boot Loader**: CSS-only pulsing emoji before Angular loads
-- **Map Skeleton**: Animated fake roads and pins during map load
 - **Auto-Expand Panel**: Bottom sheet opens automatically when route is computed
-- **Panel Pulse**: Indigo glow animation on successful computation
-- **Selection Badge**: Count chip on collapsed panel
-- **Staggered Card Animations**: Selection cards slide in with delay
-- **Touch Targets**: All buttons ≥ 44px for mobile accessibility
-- **Active State Feedback**: Scale transforms on tap
+- **Touch Targets**: All buttons >= 44px for mobile accessibility
 - **Map Legend**: Floating legend explaining marker colors
-- **Event Count Chip**: Live count with green pulse dot
-- **Handle Hint**: Drag handle pulses to hint at expandability
 
 ### Settings
 - **Home Location**: Manual coordinates or Shift+click on map
 - **Spree Time Window**: datetime-local pickers for start/end
-- **Travel Mode**: Drive, Transit, Bike, Walk
 - **Optimization Strategy**: Smart Route vs. By Start Time
 
 ### PWA & Performance
 - **Web App Manifest**: Standalone display, portrait orientation
 - **iOS Support**: apple-mobile-web-app-capable, translucent status bar
-- **Preconnects**: Google Maps, Fonts, gstatic
-- **Font Preload**: Display font preloaded for faster rendering
 - **Dark Mode**: Full dark theme with system preference detection
 - **Reduced Motion**: Respects `prefers-reduced-motion`
-- **Error Recovery**: Retry buttons for both event loading and route computation
+- **Error Recovery**: Retry buttons for event loading and route computation
 
 ## Project Structure
 
@@ -352,9 +295,8 @@ spree/
 ├── backend/
 │   ├── .env.example
 │   ├── Dockerfile                         # Multi-stage Node 22 build
-│   ├── nest-cli.json
-│   ├── package.json
-│   ├── tsconfig.json
+│   ├── data/
+│   │   └── venue-place-ids.json           # Persistent venue → Place ID cache
 │   └── src/
 │       ├── main.ts                        # Entry point + Swagger + CORS
 │       ├── app.module.ts                  # Root module
@@ -377,12 +319,21 @@ spree/
 │       │   └── venues.controller.ts
 │       ├── events/
 │       │   ├── events.module.ts
-│       │   ├── events.service.ts          # 10 mock events + time range filter
+│       │   ├── events.service.ts          # Delegates to EventGroups + IndexBerlin
 │       │   └── events.controller.ts
+│       ├── event-groups/
+│       │   ├── event-groups.module.ts
+│       │   ├── event-groups.service.ts    # Static + dynamic groups, date filtering
+│       │   └── event-groups.controller.ts # /api/event-groups endpoints
+│       ├── index-berlin/
+│       │   ├── index-berlin.module.ts
+│       │   ├── index-berlin.service.ts    # Orchestrator with 1h TTL cache
+│       │   ├── index-berlin-scraper.service.ts  # HTML scraping + time parsing
+│       │   └── venue-resolver.service.ts  # Google Place ID resolution + JSON cache
 │       └── routes/
 │           ├── routes.module.ts
-│           ├── google-routes.service.ts   # Google Routes API v2 integration
-│           ├── route-optimizer.service.ts # Greedy nearest-time algorithm
+│           ├── google-routes.service.ts   # Google Routes API v2 (walk + transit)
+│           ├── route-optimizer.service.ts # Greedy nearest-time with hybrid speed
 │           ├── spree.service.ts           # Orchestrates optimization + routing
 │           └── spree.controller.ts
 │
@@ -390,26 +341,24 @@ spree/
 │   ├── angular.json
 │   ├── package.json
 │   ├── proxy.conf.json                    # Dev proxy to backend
-│   ├── tsconfig.json
-│   ├── tsconfig.app.json
 │   └── src/
 │       ├── main.ts                        # Bootstrap + OIDC config
 │       ├── index.html                     # PWA meta, preconnects, boot loader
 │       ├── styles.css                     # Global CSS variables, dark mode, reset
 │       ├── manifest.webmanifest           # PWA manifest
-│       ├── assets/
-│       │   └── icon-192.svg              # App icon
 │       ├── environments/
 │       │   ├── environment.ts             # Dev (localhost Keycloak)
 │       │   └── environment.prod.ts        # Prod (CloudFront Keycloak)
 │       └── app/
-│           ├── app.component.ts           # Shell: splash, loading, legend, error
+│           ├── app.component.ts           # Shell: group selector, date picker, splash
 │           ├── models/
 │           │   └── domain.ts              # Frontend type definitions
 │           ├── services/
 │           │   ├── events-api.service.ts
+│           │   ├── event-groups-api.service.ts
 │           │   ├── spree-api.service.ts
 │           │   ├── spree-state.service.ts # Central signals-based state
+│           │   ├── auth.service.ts
 │           │   └── google-maps-loader.service.ts
 │           ├── pipes/
 │           │   ├── duration.pipe.ts
@@ -417,31 +366,29 @@ spree/
 │           └── components/
 │               ├── map/                   # Google Map + markers + polylines
 │               ├── spree-panel/           # Bottom sheet with selections
-│               ├── route-list/            # Timeline route display
+│               ├── route-list/            # Timeline with transit details
 │               ├── settings-drawer/       # Right-side config drawer
+│               ├── auth-chip/             # Login/logout chip
+│               ├── saved-sprees-drawer/   # Saved sprees (auth-gated)
 │               └── time-warning/          # Overflow warning banner
 │
 ├── keycloak/
 │   ├── Dockerfile                         # Official Keycloak + realm import
 │   └── spree-realm.json                   # Realm config, clients, test users
 │
-├── terraform/
-│   ├── main.tf                            # AWS provider, locals
-│   ├── variables.tf                       # Input variables
-│   ├── outputs.tf                         # URLs, ECR repos, bucket name
-│   ├── vpc.tf                             # VPC, subnets, NAT, IGW
-│   ├── security.tf                        # Security groups
-│   ├── ecr.tf                             # ECR repositories
-│   ├── ecs.tf                             # ECS Fargate cluster + services
-│   ├── alb.tf                             # ALB + path-based routing
-│   ├── rds.tf                             # Postgres for Keycloak
-│   ├── ssm.tf                             # SSM secrets + random passwords
-│   └── s3-cloudfront.tf                   # S3 + CloudFront distribution
-│
+├── terraform/                             # AWS deployment (ECS, S3, CloudFront)
 ├── docker-compose.yml                     # Local: Keycloak + Backend + Postgres
 └── README.md
 ```
 
-## Mock Data
+## AWS Deployment
 
-The backend comes pre-seeded with 10 events across 8 Berlin venues (Berghain, Astra Kulturhaus, Tempodrom, Festsaal Kreuzberg, Lido, Volksbühne, Columbiahalle, Admiralspalast) — all on April 5, 2026 with staggered start times from 06:00 to 23:00.
+The `terraform/` directory contains infrastructure-as-code to deploy the full stack to AWS. See the Terraform files for details on the architecture (CloudFront + ALB + ECS Fargate + RDS).
+
+## Data Sources
+
+### Mock Events
+Two static event groups with events on April 5 and April 10, 2026, across 8 Berlin venues (Berghain, Astra Kulturhaus, Tempodrom, Festsaal Kreuzberg, Lido, Volksbuhne, Columbiahalle, Admiralspalast).
+
+### Index Berlin (Live)
+Real gallery openings scraped from indexberlin.com. Venues are resolved to Google Place IDs and cached in `backend/data/venue-place-ids.json`. Event times are parsed from HTML (e.g. "Opening 7-9pm" on "Friday, April 10"). Default duration when no end time is given: 2 hours.

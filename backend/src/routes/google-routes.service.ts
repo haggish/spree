@@ -148,7 +148,7 @@ export class GoogleRoutesService {
     for (const leg of legs) {
       if (!leg.steps) continue;
       for (const step of leg.steps) {
-        if (step.travelMode !== 'TRANSIT' || !step.transitDetails) continue;
+        if (!step.transitDetails) continue;
         const td = step.transitDetails;
         details.push({
           transitType: td.transitLine?.vehicle?.type || 'TRANSIT',
