@@ -36,7 +36,7 @@ export class SpreeService {
 
     for (let i = 0; i < selections.length; i++) {
       const sel = selections[i];
-      const ev = this.eventsService.findByIdWithVenue(sel.eventId);
+      const ev = await this.eventsService.findByIdWithVenue(sel.eventId);
       if (!ev) {
         throw new NotFoundException(`Event ${sel.eventId} not found`);
       }

@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Event, EventWithVenue } from '../common/interfaces';
 import { VenuesService } from '../venues/venues.service';
 import { EventGroupsService } from '../event-groups/event-groups.service';
+import { IndexBerlinService } from '../index-berlin/index-berlin.service';
 
 @Injectable()
 export class EventsService {
   constructor(
     private readonly venuesService: VenuesService,
     private readonly eventGroupsService: EventGroupsService,
+    @Optional() private readonly indexBerlin?: IndexBerlinService,
   ) {}
 
   findAll(): Event[] {
@@ -22,8 +24,22 @@ export class EventsService {
     return this.eventGroupsService.getAllEvents();
   }
 
-  findByIdWithVenue(id: string): EventWithVenue | undefined {
-    return this.eventGroupsService.getAllEvents().find((e) => e.id === id);
+  async findByIdWithVenue(id: string): Promise<EventWithVenue | undefined> {
+    // Check static groups first
+    const staticEvent = this.eventGroupsService.getAllEvents().find((e) => e.id === id);
+    if (staticEvent) return staticEvent;
+
+    // Check Index Berlin cached events
+    if (this.indexBerlin) {
+      try {
+        const ibGroup = await this.indexBerlin.getEventGroup();
+        return ibGroup.events.find((e) => e.id === id);
+      } catch {
+        // Scraping failed — event not found
+      }
+    }
+
+    return undefined;
   }
 
   /**
