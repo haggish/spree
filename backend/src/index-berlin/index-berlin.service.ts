@@ -48,11 +48,9 @@ export class IndexBerlinService {
     // Collect unique venue IDs referenced by events
     const referencedVenueIds = new Set(rawEvents.map((e) => e.venueId));
 
-    // Resolve each referenced venue to a Google Place ID
-    const resolvedVenues = new Map<string, ResolvedVenue>();
-    for (const venueId of referencedVenueIds) {
+    // Resolve all referenced venues to Google Place IDs in parallel
+    const venueEntries = [...referencedVenueIds].map((venueId) => {
       const scraped = venueMap.get(venueId);
-      // Use venue data from venue list if available, otherwise fall back to event's lat/lng
       const eventWithVenue = rawEvents.find((e) => e.venueId === venueId);
       const venueData = scraped || {
         id: venueId,
@@ -60,12 +58,19 @@ export class IndexBerlinService {
         lat: eventWithVenue?.lat || 0,
         lng: eventWithVenue?.lng || 0,
       };
+      return { venueId, venueData };
+    });
 
-      const resolved = await this.venueResolver.resolve(venueData);
-      if (resolved) {
-        resolvedVenues.set(venueId, resolved);
+    const resolvedResults = await Promise.all(
+      venueEntries.map(({ venueData }) => this.venueResolver.resolve(venueData)),
+    );
+
+    const resolvedVenues = new Map<string, ResolvedVenue>();
+    venueEntries.forEach(({ venueId }, i) => {
+      if (resolvedResults[i]) {
+        resolvedVenues.set(venueId, resolvedResults[i]!);
       }
-    }
+    });
 
     // Build domain events
     const events: EventWithVenue[] = [];
