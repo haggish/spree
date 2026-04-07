@@ -43,12 +43,34 @@ services:
       PORT: 3000
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: spree
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/spree
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      DATABASE_URL: postgres://spree:spree@spree-db:5432/spree
     ports:
       - '3000:3000'
     depends_on:
       keycloak:
         condition: service_healthy
+      spree-db:
+        condition: service_healthy
+    networks:
+      - spree-net
+
+  # ── Postgres for App Data ──
+  spree-db:
+    image: postgres:16-alpine
+    container_name: spree-db
+    environment:
+      POSTGRES_DB: spree
+      POSTGRES_USER: spree
+      POSTGRES_PASSWORD: spree
+    volumes:
+      - spree_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U spree']
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - spree-net
 
@@ -71,6 +93,7 @@ services:
       - spree-net
 
 volumes:
+  spree_pgdata:
   keycloak_pgdata:
 
 networks:

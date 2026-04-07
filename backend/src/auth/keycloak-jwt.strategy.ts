@@ -34,23 +34,25 @@ export interface AuthUser {
 
 const KEYCLOAK_BASE_URL = process.env['KEYCLOAK_URL'] || 'http://localhost:8080';
 const KEYCLOAK_REALM = process.env['KEYCLOAK_REALM'] || 'spree';
+// The issuer in tokens may differ from the internal KEYCLOAK_URL (e.g. localhost vs Docker hostname)
+const KEYCLOAK_ISSUER = process.env['KEYCLOAK_ISSUER'] || `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}`;
 
 @Injectable()
 export class KeycloakJwtStrategy extends PassportStrategy(Strategy, 'keycloak') {
   constructor() {
-    const issuerUrl = `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}`;
+    const jwksUrl = `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      issuer: issuerUrl,
+      issuer: KEYCLOAK_ISSUER,
       algorithms: ['RS256'],
       // Dynamically fetch Keycloak's public keys via JWKS
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `${issuerUrl}/protocol/openid-connect/certs`,
+        jwksUri: jwksUrl,
       }),
     });
   }

@@ -1,16 +1,25 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsObject, IsOptional } from 'class-validator';
 import { SavedSpreesService } from './saved-sprees.service';
 import { CurrentUser, AuthUser } from '../auth';
 import { SpreePlan } from '../common/interfaces';
 
 class SaveSpreeBody {
+  @IsString()
   name!: string;
+
+  @IsObject()
   plan!: SpreePlan;
 }
 
 class UpdateSpreeBody {
+  @IsString()
+  @IsOptional()
   name?: string;
+
+  @IsObject()
+  @IsOptional()
   plan?: SpreePlan;
 }
 
@@ -50,8 +59,8 @@ export class SavedSpreesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a saved spree' })
-  delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    this.savedSpreesService.delete(id, user.id);
+  async delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    await this.savedSpreesService.delete(id, user.id);
     return { deleted: true };
   }
 }

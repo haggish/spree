@@ -1,31 +1,25 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { SavedSpree } from './saved-spree.interfaces';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SavedSpreeEntity } from './saved-spree.entity';
 import { SpreePlan } from '../common/interfaces';
-import { randomUUID } from 'crypto';
 
-/**
- * In-memory store for saved sprees.
- * In production, replace with a database (Postgres, MongoDB, etc).
- */
 @Injectable()
 export class SavedSpreesService {
-  private readonly store = new Map<string, SavedSpree>();
+  constructor(
+    @InjectRepository(SavedSpreeEntity)
+    private readonly repo: Repository<SavedSpreeEntity>,
+  ) {}
 
-  /**
-   * Get all saved sprees for a user.
-   */
-  findByUser(userId: string): SavedSpree[] {
-    return Array.from(this.store.values())
-      .filter((s) => s.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  async findByUser(userId: string): Promise<SavedSpreeEntity[]> {
+    return this.repo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  /**
-   * Get a single saved spree by ID.
-   * Verifies the spree belongs to the requesting user.
-   */
-  findById(id: string, userId: string): SavedSpree {
-    const spree = this.store.get(id);
+  async findById(id: string, userId: string): Promise<SavedSpreeEntity> {
+    const spree = await this.repo.findOneBy({ id });
     if (!spree) {
       throw new NotFoundException(`Saved spree ${id} not found`);
     }
@@ -35,40 +29,26 @@ export class SavedSpreesService {
     return spree;
   }
 
-  /**
-   * Save a new spree plan.
-   */
-  create(userId: string, name: string, plan: SpreePlan): SavedSpree {
-    const now = new Date().toISOString();
-    const saved: SavedSpree = {
-      id: randomUUID(),
-      userId,
-      name,
-      createdAt: now,
-      updatedAt: now,
-      plan,
-    };
-    this.store.set(saved.id, saved);
-    return saved;
+  async create(userId: string, name: string, plan: SpreePlan): Promise<SavedSpreeEntity> {
+    // If a spree with the same name exists for this user, update it
+    const existing = await this.repo.findOneBy({ userId, name });
+    if (existing) {
+      existing.plan = plan;
+      return this.repo.save(existing);
+    }
+    const spree = this.repo.create({ userId, name, plan });
+    return this.repo.save(spree);
   }
 
-  /**
-   * Update a saved spree's name or plan.
-   */
-  update(id: string, userId: string, name?: string, plan?: SpreePlan): SavedSpree {
-    const existing = this.findById(id, userId);
+  async update(id: string, userId: string, name?: string, plan?: SpreePlan): Promise<SavedSpreeEntity> {
+    const existing = await this.findById(id, userId);
     if (name !== undefined) existing.name = name;
     if (plan !== undefined) existing.plan = plan;
-    existing.updatedAt = new Date().toISOString();
-    this.store.set(id, existing);
-    return existing;
+    return this.repo.save(existing);
   }
 
-  /**
-   * Delete a saved spree.
-   */
-  delete(id: string, userId: string): void {
-    this.findById(id, userId); // verify ownership
-    this.store.delete(id);
+  async delete(id: string, userId: string): Promise<void> {
+    const existing = await this.findById(id, userId);
+    await this.repo.remove(existing);
   }
 }
