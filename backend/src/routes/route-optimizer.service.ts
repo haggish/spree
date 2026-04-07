@@ -45,7 +45,6 @@ export class RouteOptimizerService {
   buildTravelMatrix(
     homeLocation: LatLng,
     events: SchedulableEvent[],
-    travelMode: string,
   ): TravelEstimate[][] {
     const locations = [homeLocation, ...events.map((e) => e.venue.location)];
     const n = locations.length;
@@ -53,22 +52,22 @@ export class RouteOptimizerService {
       Array.from({ length: n }, () => ({ durationSeconds: 0, distanceMeters: 0 })),
     );
 
-    // Speed estimates (m/s) for haversine-based matrix
-    const speeds: Record<string, number> = {
-      DRIVE: 8.33,     // ~30 km/h urban
-      WALK: 1.39,      // ~5 km/h
-      BICYCLE: 4.17,   // ~15 km/h
-      TRANSIT: 6.94,   // ~25 km/h
-    };
-    const speed = speeds[travelMode] || speeds['DRIVE'];
+    // Hybrid walk/transit: walk speed for short distances, transit for longer ones
+    const WALK_SPEED = 1.39;    // ~5 km/h (m/s)
+    const TRANSIT_SPEED = 6.94; // ~25 km/h (m/s)
+    const TRANSIT_OVERHEAD = 300; // 5 min flat penalty for waiting/transfers (seconds)
+    const WALK_THRESHOLD = 1000;  // meters — below this, walking is usually faster
 
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (i === j) continue;
         const dist = this.haversineDistance(locations[i], locations[j]);
+        const walkDuration = dist / WALK_SPEED;
+        const transitDuration = dist / TRANSIT_SPEED + TRANSIT_OVERHEAD;
+        const duration = dist < WALK_THRESHOLD ? walkDuration : Math.min(walkDuration, transitDuration);
         matrix[i][j] = {
           distanceMeters: Math.round(dist),
-          durationSeconds: Math.round(dist / speed),
+          durationSeconds: Math.round(duration),
         };
       }
     }
@@ -99,9 +98,8 @@ export class RouteOptimizerService {
     events: SchedulableEvent[],
     spreeStartTime: Date,
     spreeEndTime: Date,
-    travelMode: string,
   ): OptimizationResult {
-    const matrix = this.buildTravelMatrix(homeLocation, events, travelMode);
+    const matrix = this.buildTravelMatrix(homeLocation, events);
     const n = events.length;
 
     const visited = new Set<number>();

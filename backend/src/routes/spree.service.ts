@@ -29,7 +29,7 @@ export class SpreeService {
    * 4. Track cumulative time, idle waits, flag overflow
    */
   async computeSpreePlan(dto: ComputeSpreeDto): Promise<SpreePlan> {
-    const { homeLocation, startTime, endTime, selections, travelMode, strategy } = dto;
+    const { homeLocation, startTime, endTime, selections, strategy } = dto;
 
     // 1. Resolve events into SchedulableEvent[]
     const schedulable: SchedulableEvent[] = [];
@@ -58,7 +58,6 @@ export class SpreeService {
           schedulable,
           spreeStart,
           spreeEnd,
-          travelMode,
         );
 
     const { orderedEvents, skippedEvents, strategy: usedStrategy } = optimization;
@@ -77,11 +76,10 @@ export class SpreeService {
       const destLocation = ev.venue.location;
       const destLabel = ev.venue.name;
 
-      // Compute travel via Google Routes API (real or mock)
-      const routeSegment = await this.googleRoutesService.computeRoute(
+      // Compute travel via Google Routes API — pick faster of walk vs transit
+      const routeSegment = await this.googleRoutesService.computeFastestRoute(
         currentLocation,
         destLocation,
-        travelMode,
         currentLabel,
         destLabel,
       );

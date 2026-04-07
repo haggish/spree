@@ -17,11 +17,10 @@ export class SpreeStateService {
 
   // ── Config ──
   readonly config = signal<SpreeConfig>({
-    homeLocation: { lat: 52.52, lng: 13.405 }, // Berlin Mitte default
+    homeLocation: { lat: 52.4864597, lng: 13.3524421 }, // Berlin Mitte default
     homeLabel: 'Home',
     startTime: '2026-04-05T10:00:00+02:00',
     endTime: '2026-04-05T22:00:00+02:00',
-    travelMode: 'DRIVE',
     strategy: 'greedy',
   });
 
@@ -167,7 +166,6 @@ export class SpreeStateService {
           startTime: cfg.startTime,
           endTime: cfg.endTime,
           selections,
-          travelMode: cfg.travelMode,
           strategy: cfg.strategy,
         }),
       );

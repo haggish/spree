@@ -44,11 +44,6 @@ export class ComputeSpreeDto {
   @Type(() => SpreeSelectionDto)
   selections!: SpreeSelectionDto[];
 
-  @ApiProperty({ example: 'DRIVE', required: false })
-  @IsString()
-  @IsOptional()
-  travelMode: string = 'DRIVE';
-
   @ApiProperty({
     example: 'greedy',
     required: false,

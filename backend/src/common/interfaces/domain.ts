@@ -29,6 +29,14 @@ export interface EventWithVenue extends Event {
   venue: Venue;
 }
 
+// ── Transit step detail (bus, tram, subway, etc.) ──
+export interface TransitDetail {
+  transitType: string;        // BUS, SUBWAY, TRAM, RAIL, etc.
+  lineName: string;           // e.g. "M19", "U2"
+  departureStop: string;      // stop name
+  arrivalStop: string;        // stop name
+}
+
 // ── A single leg of the spree route ──
 export interface RouteSegment {
   fromLabel: string;
@@ -39,6 +47,7 @@ export interface RouteSegment {
   distanceMeters: number;
   durationSeconds: number;
   polyline: string;           // encoded polyline from Routes API
+  transitDetails?: TransitDetail[];  // present when travelMode is TRANSIT
 }
 
 // ── Selection: an event the user picked + how long they'll stay ──

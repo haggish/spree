@@ -29,6 +29,14 @@ export interface EventWithVenue extends SpreeEvent {
   venue: Venue;
 }
 
+// ── Transit step detail (bus, tram, subway, etc.) ──
+export interface TransitDetail {
+  transitType: string;
+  lineName: string;
+  departureStop: string;
+  arrivalStop: string;
+}
+
 // ── Route segment between two locations ──
 export interface RouteSegment {
   fromLabel: string;
@@ -39,6 +47,7 @@ export interface RouteSegment {
   distanceMeters: number;
   durationSeconds: number;
   polyline: string;
+  transitDetails?: TransitDetail[];
 }
 
 // ── User's selection of an event to attend ──
@@ -109,7 +118,6 @@ export interface ComputeSpreeRequest {
   startTime: string;
   endTime: string;
   selections: SpreeSelection[];
-  travelMode: string;
   strategy: string;
 }
 
@@ -119,6 +127,5 @@ export interface SpreeConfig {
   homeLabel: string;
   startTime: string;
   endTime: string;
-  travelMode: string;
   strategy: string;
 }

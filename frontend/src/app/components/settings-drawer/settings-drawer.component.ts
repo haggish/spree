@@ -69,23 +69,6 @@ import { SpreeStateService } from '../../services';
             />
           </div>
 
-          <!-- Travel mode -->
-          <div class="field-group">
-            <label class="field-label">Travel Mode</label>
-            <div class="mode-selector">
-              @for (mode of travelModes; track mode.value) {
-                <button
-                  class="mode-btn"
-                  [class.active]="state.config().travelMode === mode.value"
-                  (click)="state.updateConfig({ travelMode: mode.value })"
-                >
-                  <span class="mode-icon">{{ mode.icon }}</span>
-                  <span class="mode-label">{{ mode.label }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
           <!-- Optimization strategy -->
           <div class="field-group">
             <label class="field-label">Route Optimization</label>
@@ -224,36 +207,6 @@ import { SpreeStateService } from '../../services';
       color: var(--text-secondary);
       font-style: italic;
     }
-    .mode-selector {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .mode-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 10px 4px;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: transparent;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .mode-btn.active {
-      border-color: var(--accent);
-      background: var(--accent-faint);
-    }
-    .mode-icon { font-size: 20px; }
-    .mode-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-    .mode-btn.active .mode-label {
-      color: var(--accent);
-    }
 
     /* ── Strategy selector ── */
     .strategy-selector {
@@ -301,13 +254,6 @@ import { SpreeStateService } from '../../services';
 export class SettingsDrawerComponent {
   readonly state = inject(SpreeStateService);
   readonly open = signal(false);
-
-  readonly travelModes = [
-    { value: 'DRIVE', label: 'Drive', icon: '🚗' },
-    { value: 'TRANSIT', label: 'Transit', icon: '🚇' },
-    { value: 'BICYCLE', label: 'Bike', icon: '🚲' },
-    { value: 'WALK', label: 'Walk', icon: '🚶' },
-  ];
 
   readonly strategies = [
     {

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LatLng, RouteSegment } from '../common/interfaces';
+import { LatLng, RouteSegment, TransitDetail } from '../common/interfaces';
 
 const GOOGLE_ROUTES_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
 
@@ -12,6 +12,20 @@ interface RoutesApiResponse {
       distanceMeters: number;
       duration: string;
       polyline: { encodedPolyline: string };
+      steps?: Array<{
+        travelMode?: string;
+        transitDetails?: {
+          stopDetails?: {
+            departureStop?: { name?: string };
+            arrivalStop?: { name?: string };
+          };
+          transitLine?: {
+            nameShort?: string;
+            name?: string;
+            vehicle?: { type?: string };
+          };
+        };
+      }>;
     }>;
   }>;
 }
@@ -54,12 +68,17 @@ export class GoogleRoutesService {
         languageCode: 'en',
       };
 
+      // Request transit step details when using TRANSIT mode
+      const fieldMask = travelMode === 'TRANSIT'
+        ? 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.travelMode,routes.legs.steps.transitDetails'
+        : 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline';
+
       const response = await fetch(GOOGLE_ROUTES_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+          'X-Goog-FieldMask': fieldMask,
         },
         body: JSON.stringify(body),
       });
@@ -74,6 +93,9 @@ export class GoogleRoutesService {
       const route = data.routes[0];
       const durationSeconds = parseInt(route.duration.replace('s', ''), 10);
 
+      // Extract transit details from leg steps
+      const transitDetails = this.extractTransitDetails(route.legs);
+
       return {
         fromLabel: originLabel,
         fromLocation: origin,
@@ -83,11 +105,60 @@ export class GoogleRoutesService {
         distanceMeters: route.distanceMeters,
         durationSeconds,
         polyline: route.polyline.encodedPolyline,
+        ...(transitDetails.length > 0 && { transitDetails }),
       };
     } catch (error) {
       this.logger.error('Google Routes API error, falling back to mock', error);
       return this.mockRoute(origin, destination, travelMode, originLabel, destinationLabel);
     }
+  }
+
+  /**
+   * Compute both walk and transit routes in parallel, return the faster one.
+   */
+  async computeFastestRoute(
+    origin: LatLng,
+    destination: LatLng,
+    originLabel: string = 'Origin',
+    destinationLabel: string = 'Destination',
+  ): Promise<RouteSegment> {
+    const [walkRoute, transitRoute] = await Promise.allSettled([
+      this.computeRoute(origin, destination, 'WALK', originLabel, destinationLabel),
+      this.computeRoute(origin, destination, 'TRANSIT', originLabel, destinationLabel),
+    ]);
+
+    const walk = walkRoute.status === 'fulfilled' ? walkRoute.value : null;
+    const transit = transitRoute.status === 'fulfilled' ? transitRoute.value : null;
+
+    if (walk && transit) {
+      return walk.durationSeconds <= transit.durationSeconds ? walk : transit;
+    }
+    return walk || transit!;
+  }
+
+  /**
+   * Extract transit details (line name, stops, vehicle type) from route legs.
+   */
+  private extractTransitDetails(
+    legs: NonNullable<RoutesApiResponse['routes']>[0]['legs'],
+  ): TransitDetail[] {
+    const details: TransitDetail[] = [];
+    if (!legs) return details;
+
+    for (const leg of legs) {
+      if (!leg.steps) continue;
+      for (const step of leg.steps) {
+        if (step.travelMode !== 'TRANSIT' || !step.transitDetails) continue;
+        const td = step.transitDetails;
+        details.push({
+          transitType: td.transitLine?.vehicle?.type || 'TRANSIT',
+          lineName: td.transitLine?.nameShort || td.transitLine?.name || '',
+          departureStop: td.stopDetails?.departureStop?.name || '',
+          arrivalStop: td.stopDetails?.arrivalStop?.name || '',
+        });
+      }
+    }
+    return details;
   }
 
   /**

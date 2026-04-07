@@ -61,6 +61,16 @@ import { DistancePipe } from '../../pipes/distance.pipe';
               <div class="travel-info">
                 <span class="travel-duration">{{ leg.travelFromPrevious.durationSeconds | duration }}</span>
                 <span class="travel-distance">{{ leg.travelFromPrevious.distanceMeters | distance }}</span>
+                @if (leg.travelFromPrevious.transitDetails?.length) {
+                  <div class="transit-details">
+                    @for (td of leg.travelFromPrevious.transitDetails; track $index) {
+                      <div class="transit-step">
+                        <span class="transit-badge">{{ getTransitIcon(td.transitType) }} {{ td.lineName }}</span>
+                        <span class="transit-stops">{{ td.departureStop }} → {{ td.arrivalStop }}</span>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -316,6 +326,35 @@ import { DistancePipe } from '../../pipes/distance.pipe';
       font-size: 11px;
       color: var(--text-secondary);
     }
+    .transit-details {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .transit-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+    .transit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 7px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 100px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .transit-stops {
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     /* ── Idle wait ── */
     .idle-indicator {
@@ -416,5 +455,18 @@ export class RouteListComponent {
       TRANSIT: '🚇',
     };
     return icons[mode] || '🚗';
+  }
+
+  getTransitIcon(type: string): string {
+    const icons: Record<string, string> = {
+      BUS: '🚌',
+      SUBWAY: '🚇',
+      TRAM: '🚊',
+      RAIL: '🚆',
+      COMMUTER_TRAIN: '🚆',
+      LIGHT_RAIL: '🚈',
+      FERRY: '⛴️',
+    };
+    return icons[type] || '🚌';
   }
 }
