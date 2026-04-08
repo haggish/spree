@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { Event, EventWithVenue, EventGroupSummary, EventGroup } from '../common/interfaces';
 import { VenuesService } from '../venues/venues.service';
 import { IndexBerlinService } from '../index-berlin/index-berlin.service';
+import { KulturdatenService } from '../kulturdaten-berlin/kulturdaten.service';
 
 interface EventGroupData {
   id: string;
@@ -186,6 +187,7 @@ export class EventGroupsService {
   constructor(
     private readonly venuesService: VenuesService,
     @Optional() private readonly indexBerlin?: IndexBerlinService,
+    @Optional() private readonly kulturdaten?: KulturdatenService,
   ) {}
 
   private resolveVenues(events: Event[]): EventWithVenue[] {
@@ -236,20 +238,33 @@ export class EventGroupsService {
 
   async findAll(): Promise<EventGroupSummary[]> {
     const staticGroups = this.groups.map((g) => this.computeSummary(g));
+    const dynamicSummaries: EventGroupSummary[] = [];
+
     if (this.indexBerlin) {
       try {
-        const ibSummary = await this.indexBerlin.getSummary();
-        return [...staticGroups, ibSummary];
+        dynamicSummaries.push(await this.indexBerlin.getSummary());
       } catch {
-        // If Index Berlin scraping fails, return static groups only
+        // If Index Berlin scraping fails, skip it
       }
     }
-    return staticGroups;
+
+    if (this.kulturdaten) {
+      try {
+        dynamicSummaries.push(await this.kulturdaten.getSummary());
+      } catch {
+        // If Kulturdaten fetch fails, skip it
+      }
+    }
+
+    return [...staticGroups, ...dynamicSummaries];
   }
 
   async findById(id: string): Promise<EventGroup | undefined> {
     if (this.indexBerlin && id === this.indexBerlin.groupId) {
       return this.indexBerlin.getEventGroup();
+    }
+    if (this.kulturdaten && id === this.kulturdaten.groupId) {
+      return this.kulturdaten.getEventGroup();
     }
     const group = this.groups.find((g) => g.id === id);
     if (!group) return undefined;
@@ -267,6 +282,10 @@ export class EventGroupsService {
         ...full,
         events: full.events.filter((e) => this.localDate(e.startTime) === date),
       };
+    }
+    if (this.kulturdaten && id === this.kulturdaten.groupId) {
+      // Kulturdaten fetches per-date natively, so pass the date through
+      return this.kulturdaten.getEventGroup(date);
     }
     const group = this.groups.find((g) => g.id === id);
     if (!group) return undefined;

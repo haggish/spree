@@ -3,6 +3,7 @@ import { Event, EventWithVenue } from '../common/interfaces';
 import { VenuesService } from '../venues/venues.service';
 import { EventGroupsService } from '../event-groups/event-groups.service';
 import { IndexBerlinService } from '../index-berlin/index-berlin.service';
+import { KulturdatenService } from '../kulturdaten-berlin/kulturdaten.service';
 
 @Injectable()
 export class EventsService {
@@ -10,6 +11,7 @@ export class EventsService {
     private readonly venuesService: VenuesService,
     private readonly eventGroupsService: EventGroupsService,
     @Optional() private readonly indexBerlin?: IndexBerlinService,
+    @Optional() private readonly kulturdaten?: KulturdatenService,
   ) {}
 
   findAll(): Event[] {
@@ -33,9 +35,21 @@ export class EventsService {
     if (this.indexBerlin) {
       try {
         const ibGroup = await this.indexBerlin.getEventGroup();
-        return ibGroup.events.find((e) => e.id === id);
+        const found = ibGroup.events.find((e) => e.id === id);
+        if (found) return found;
       } catch {
-        // Scraping failed — event not found
+        // Scraping failed
+      }
+    }
+
+    // Check Kulturdaten Berlin cached events
+    if (this.kulturdaten) {
+      try {
+        const kdGroup = await this.kulturdaten.getEventGroup();
+        const found = kdGroup.events.find((e) => e.id === id);
+        if (found) return found;
+      } catch {
+        // Fetch failed
       }
     }
 

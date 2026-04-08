@@ -25,6 +25,11 @@ CLAUDE.md
 .terraform/
 *.tfvars
 
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+
 # OS files
 Thumbs.db
 .DS_Store
