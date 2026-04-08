@@ -37,7 +37,9 @@ A mobile-native application that plans optimized walking/transit routes for visi
 - **Maps**: Google Maps JavaScript SDK (Advanced Markers, Geometry)
 - **Routing**: Google Routes API v2 (walk + transit, per-leg mode selection)
 - **Places**: Google Places API (Find Place from Text, venue resolution)
-- **Data**: Index Berlin scraping (gallery openings, real venue data)
+- **Data**: Index Berlin scraping (gallery openings, real venue data), Kulturdaten Berlin API (city-wide cultural events)
+- **Testing**: Vitest (unit + integration), Playwright (E2E)
+- **CI/CD**: GitHub Actions (CI on push, E2E on PR, Dependabot)
 - **Infra**: Docker Compose (local), Terraform (AWS ECS Fargate, S3, CloudFront, RDS, ALB)
 
 ## Prerequisites
@@ -143,9 +145,24 @@ The backend scrapes real gallery opening data from [Index Berlin](https://www.in
 
 Scraped data is cached in memory for 1 hour (configurable via `INDEX_BERLIN_CACHE_TTL_MS` env var).
 
-### Venue resolution
+### Kulturdaten Berlin (API)
 
-Each venue is resolved to a **Google Place ID** via the Find Place from Text API. Results are cached persistently in `backend/data/venue-place-ids.json` — a venue is only resolved once, and the cache file can be committed to Git as a warm-start seed.
+The backend fetches cultural events from the [Kulturdaten Berlin API](https://api-v2.kulturdaten.berlin/api):
+- **Events** by date range — concerts, exhibitions, readings, dance, theater, and more
+- **Locations** resolved to Google Place IDs via street address geocoding
+- **Attractions** provide event titles, descriptions, and category tags
+
+Events are fetched per-date and cached in memory for 1 hour (configurable via `KULTURDATEN_CACHE_TTL_MS`). Location resolutions are cached persistently in `backend/data/kulturdaten-place-ids.json`.
+
+All-day events (startTime `00:00:00`) are filtered out since the route optimizer needs specific time windows.
+
+### Venue/location resolution
+
+Each venue or location is resolved to a **Google Place ID** via the Find Place from Text API. Results are cached persistently:
+- `backend/data/venue-place-ids.json` — Index Berlin venues (keyed by venue ID)
+- `backend/data/kulturdaten-place-ids.json` — Kulturdaten locations (keyed by location ID)
+
+Only new venues/locations trigger API calls. Cache files can be committed to Git as warm-start seeds.
 
 ## Travel Mode
 
@@ -250,6 +267,7 @@ During route optimization (before real API calls), a hybrid speed model estimate
 - **Event Groups**: Organize events into named groups, selectable via dropdown
 - **Date Filtering**: Pick a date to see only events on that day
 - **Index Berlin Integration**: Real gallery opening data scraped from indexberlin.com
+- **Kulturdaten Berlin Integration**: City-wide cultural events via the Kulturdaten Berlin API
 - **Map View**: Interactive Google Map with Advanced Markers for event venues
 - **Time Filtering**: Events outside your spree window are grayed out and disabled
 - **Event Selection**: Tap markers to see details and add/remove from spree
@@ -288,6 +306,66 @@ During route optimization (before real API calls), a hybrid speed model estimate
 - **Reduced Motion**: Respects `prefers-reduced-motion`
 - **Error Recovery**: Retry buttons for event loading and route computation
 
+## Testing
+
+### Backend — Vitest
+
+Unit and integration tests using [Vitest](https://vitest.dev/) with SWC for NestJS decorator support.
+
+```bash
+cd backend
+npm test              # run all tests
+npm run test:watch    # watch mode
+npm run test:coverage # with coverage report
+```
+
+**Unit tests** (11 files, 91 tests) cover all services:
+- Kulturdaten API client, location resolver, orchestrator
+- Index Berlin scraper (HTML parsing, time parsing), venue resolver, orchestrator
+- Event groups service (static + dynamic groups, date filtering, timezone handling)
+- Events service (cross-source lookup)
+- Route optimizer (greedy algorithm, travel matrix, time-sort)
+- Google Routes service (API/mock modes, transit details, walk vs transit)
+- Spree service (plan computation, strategies, idle wait, window overflow)
+
+**Integration tests** (3 files, 19 tests) spin up a real NestJS app via `@nestjs/testing` + supertest:
+- `GET /api/event-groups` — list, by ID, by date, 404 handling
+- `GET /api/events` — list, time range filtering, by ID
+- `POST /api/spree/compute` — greedy/time-sort strategies, DTO validation, error cases
+
+### Frontend — Playwright
+
+End-to-end tests using [Playwright](https://playwright.dev/) with Chromium. API responses are mocked via route interception so tests don't require the backend or Keycloak.
+
+```bash
+cd frontend
+npm run e2e           # headless
+npm run e2e:headed    # visible browser
+```
+
+**E2E tests** (1 file, 15 tests) cover:
+- App shell (splash screen, dismiss, map legend)
+- Event group selection (dropdown, auto-select, date picker, group switching)
+- Spree panel (header, empty state, selection count)
+- Settings drawer (open/close, inputs, strategy buttons)
+- Map area (component rendering)
+
+## CI/CD
+
+### GitHub Actions
+
+| Workflow | Trigger | Jobs |
+|----------|---------|------|
+| **CI** (`.github/workflows/ci.yml`) | Push + PR to master | Backend: typecheck, test, build. Frontend: production build. |
+| **E2E** (`.github/workflows/e2e.yml`) | PR to master | Playwright tests with both servers, failure artifacts uploaded. |
+
+### Dependabot
+
+`.github/dependabot.yml` checks weekly for updates:
+- Backend npm (groups NestJS and Vitest packages)
+- Frontend npm (groups Angular and Playwright packages)
+- GitHub Actions versions
+
 ## Project Structure
 
 ```
@@ -295,8 +373,15 @@ spree/
 ├── backend/
 │   ├── .env.example
 │   ├── Dockerfile                         # Multi-stage Node 22 build
+│   ├── vitest.config.ts                     # Test config (SWC, path aliases)
+│   ├── test/                                # Integration tests
+│   │   ├── test-app.ts                      # Shared NestJS test app setup
+│   │   ├── event-groups.integration.spec.ts
+│   │   ├── events.integration.spec.ts
+│   │   └── spree.integration.spec.ts
 │   ├── data/
-│   │   └── venue-place-ids.json           # Persistent venue → Place ID cache
+│   │   ├── venue-place-ids.json           # Index Berlin venue → Place ID cache
+│   │   └── kulturdaten-place-ids.json     # Kulturdaten location → Place ID cache
 │   └── src/
 │       ├── main.ts                        # Entry point + Swagger + CORS
 │       ├── app.module.ts                  # Root module
@@ -319,7 +404,7 @@ spree/
 │       │   └── venues.controller.ts
 │       ├── events/
 │       │   ├── events.module.ts
-│       │   ├── events.service.ts          # Delegates to EventGroups + IndexBerlin
+│       │   ├── events.service.ts          # Delegates to EventGroups + IndexBerlin + Kulturdaten
 │       │   └── events.controller.ts
 │       ├── event-groups/
 │       │   ├── event-groups.module.ts
@@ -330,6 +415,11 @@ spree/
 │       │   ├── index-berlin.service.ts    # Orchestrator with 1h TTL cache
 │       │   ├── index-berlin-scraper.service.ts  # HTML scraping + time parsing
 │       │   └── venue-resolver.service.ts  # Google Place ID resolution + JSON cache
+│       ├── kulturdaten-berlin/
+│       │   ├── kulturdaten-berlin.module.ts
+│       │   ├── kulturdaten.service.ts     # Orchestrator with per-date TTL cache
+│       │   ├── kulturdaten-api.service.ts # REST client for Kulturdaten API
+│       │   └── location-resolver.service.ts # Address-based Google Place ID resolution
 │       └── routes/
 │           ├── routes.module.ts
 │           ├── google-routes.service.ts   # Google Routes API v2 (walk + transit)
@@ -341,6 +431,10 @@ spree/
 │   ├── angular.json
 │   ├── package.json
 │   ├── proxy.conf.json                    # Dev proxy to backend
+│   ├── playwright.config.ts               # E2E test config
+│   ├── e2e/                               # Playwright E2E tests
+│   │   ├── app.spec.ts
+│   │   └── fixtures.ts                    # Mock API responses
 │   └── src/
 │       ├── main.ts                        # Bootstrap + OIDC config
 │       ├── index.html                     # PWA meta, preconnects, boot loader
@@ -376,6 +470,12 @@ spree/
 │   ├── Dockerfile                         # Official Keycloak + realm import
 │   └── spree-realm.json                   # Realm config, clients, test users
 │
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                         # Backend tests + frontend build
+│   │   └── e2e.yml                        # Playwright E2E on PRs
+│   └── dependabot.yml                     # Weekly dependency updates
+│
 ├── terraform/                             # AWS deployment (ECS, S3, CloudFront)
 ├── docker-compose.yml                     # Local: Keycloak + Backend + Postgres
 └── README.md
@@ -392,3 +492,6 @@ Two static event groups with events on April 5 and April 10, 2026, across 8 Berl
 
 ### Index Berlin (Live)
 Real gallery openings scraped from indexberlin.com. Venues are resolved to Google Place IDs and cached in `backend/data/venue-place-ids.json`. Event times are parsed from HTML (e.g. "Opening 7-9pm" on "Friday, April 10"). Default duration when no end time is given: 2 hours.
+
+### Kulturdaten Berlin (Live)
+City-wide cultural events from the [Kulturdaten Berlin API](https://api-v2.kulturdaten.berlin/api). Covers concerts, exhibitions, readings, theater, dance, and more (~100-150 events per day). Locations are resolved to Google Place IDs via address geocoding and cached in `backend/data/kulturdaten-place-ids.json`. All-day events are filtered out.
