@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SavedSpreeEntity } from './saved-spree.entity';
@@ -6,6 +6,8 @@ import { SpreePlan } from '../common/interfaces';
 
 @Injectable()
 export class SavedSpreesService {
+  private readonly logger = new Logger(SavedSpreesService.name);
+
   constructor(
     @InjectRepository(SavedSpreeEntity)
     private readonly repo: Repository<SavedSpreeEntity>,
@@ -34,10 +36,13 @@ export class SavedSpreesService {
     const existing = await this.repo.findOneBy({ userId, name });
     if (existing) {
       existing.plan = plan;
+      this.logger.log(`Spree updated: user=${userId}, name="${name}", id=${existing.id}`);
       return this.repo.save(existing);
     }
     const spree = this.repo.create({ userId, name, plan });
-    return this.repo.save(spree);
+    const saved = await this.repo.save(spree);
+    this.logger.log(`Spree created: user=${userId}, name="${name}", id=${saved.id}`);
+    return saved;
   }
 
   async update(id: string, userId: string, name?: string, plan?: SpreePlan): Promise<SavedSpreeEntity> {
@@ -50,5 +55,6 @@ export class SavedSpreesService {
   async delete(id: string, userId: string): Promise<void> {
     const existing = await this.findById(id, userId);
     await this.repo.remove(existing);
+    this.logger.log(`Spree deleted: user=${userId}, id=${id}`);
   }
 }

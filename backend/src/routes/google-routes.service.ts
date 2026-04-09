@@ -108,7 +108,7 @@ export class GoogleRoutesService {
         ...(transitDetails.length > 0 && { transitDetails }),
       };
     } catch (error) {
-      this.logger.error('Google Routes API error, falling back to mock', error);
+      this.logger.error(`Google Routes API error, falling back to mock: ${error instanceof Error ? error.message : 'unknown'}`);
       return this.mockRoute(origin, destination, travelMode, originLabel, destinationLabel);
     }
   }

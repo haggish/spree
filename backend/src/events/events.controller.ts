@@ -48,6 +48,6 @@ export class EventsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete an event (organizer/admin only)' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.eventsService.remove(id);
+    return this.eventsService.remove(id, user);
   }
 }

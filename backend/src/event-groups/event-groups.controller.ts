@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { EventGroupsService } from './event-groups.service';
 import { Public } from '../auth';
@@ -19,6 +19,9 @@ export class EventGroupsController {
   @Public()
   @ApiOperation({ summary: 'Get event group filtered by date (YYYY-MM-DD) (public)' })
   async findByIdAtDate(@Param('id') id: string, @Param('date') date: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new BadRequestException('Date must be in YYYY-MM-DD format');
+    }
     const group = await this.eventGroupsService.findByIdAtDate(id, date);
     if (!group) {
       throw new NotFoundException(`Event group "${id}" not found`);

@@ -34,6 +34,7 @@ export interface AuthUser {
 
 const KEYCLOAK_BASE_URL = process.env['KEYCLOAK_URL'] || 'http://localhost:8080';
 const KEYCLOAK_REALM = process.env['KEYCLOAK_REALM'] || 'spree';
+const KEYCLOAK_CLIENT_ID = process.env['KEYCLOAK_CLIENT_ID'] || 'spree-frontend';
 // The issuer in tokens may differ from the internal KEYCLOAK_URL (e.g. localhost vs Docker hostname)
 const KEYCLOAK_ISSUER = process.env['KEYCLOAK_ISSUER'] || `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}`;
 
@@ -64,6 +65,11 @@ export class KeycloakJwtStrategy extends PassportStrategy(Strategy, 'keycloak') 
   validate(payload: KeycloakTokenPayload): AuthUser {
     if (!payload.sub) {
       throw new UnauthorizedException('Invalid token: missing subject');
+    }
+
+    // Validate authorized party matches expected client
+    if (payload.azp && payload.azp !== KEYCLOAK_CLIENT_ID) {
+      throw new UnauthorizedException('Invalid token: unauthorized client');
     }
 
     // Roles can come from realm_roles (custom mapper) or realm_access.roles (default)

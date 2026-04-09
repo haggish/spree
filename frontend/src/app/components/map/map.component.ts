@@ -11,6 +11,15 @@ import { CommonModule } from '@angular/common';
 import { GoogleMapsLoaderService, SpreeStateService } from '../../services';
 import { EventWithVenue } from '../../models';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -286,7 +295,7 @@ export class MapComponent implements OnInit, OnDestroy {
         ? String(routeOrder)
         : isSelected
           ? '✓'
-          : ev.venue.name.charAt(0);
+          : escapeHtml(ev.venue.name.charAt(0));
 
       const size = hasOrder ? 36 : 32;
 
@@ -339,26 +348,27 @@ export class MapComponent implements OnInit, OnDestroy {
       minute: '2-digit',
     });
 
+    const safeId = escapeHtml(ev.id);
     const content = `
       <div style="font-family: system-ui, sans-serif; max-width: 260px; padding: 4px;">
         <h3 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1e293b;">
-          ${ev.name}
+          ${escapeHtml(ev.name)}
         </h3>
         <p style="margin: 0 0 4px; font-size: 12px; color: #64748b;">
-          ${ev.presenter} · ${ev.venue.name}
+          ${escapeHtml(ev.presenter)} · ${escapeHtml(ev.venue.name)}
         </p>
         <p style="margin: 0 0 8px; font-size: 12px; color: #475569;">
           🕐 ${startTime} – ${endTime}
         </p>
         <p style="margin: 0 0 10px; font-size: 13px; color: #334155; line-height: 1.4;">
-          ${ev.description}
+          ${escapeHtml(ev.description)}
         </p>
         ${isDisabled
           ? `<div style="padding: 6px 10px; background: #f1f5f9; border-radius: 6px; font-size: 12px; color: #94a3b8; text-align: center;">
               Outside your spree time window
             </div>`
           : `<button
-              id="spree-toggle-${ev.id}"
+              id="spree-toggle-${safeId}"
               style="
                 width: 100%; padding: 8px 12px; border: none; border-radius: 8px;
                 font-size: 13px; font-weight: 600; cursor: pointer;
@@ -379,7 +389,7 @@ export class MapComponent implements OnInit, OnDestroy {
     // Attach click handler after info window renders
     if (!isDisabled) {
       setTimeout(() => {
-        const btn = document.getElementById(`spree-toggle-${ev.id}`);
+        const btn = document.getElementById(`spree-toggle-${safeId}`);
         if (btn) {
           btn.addEventListener('click', () => {
             this.state.toggleEventSelection(ev.id);

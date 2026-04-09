@@ -88,7 +88,7 @@ export class EventsService {
   /**
    * Remove an event by ID.
    */
-  remove(id: string): { deleted: boolean } {
+  remove(id: string, _user: { id: string; username: string }): { deleted: boolean } {
     // No-op for now — mock data is read-only
     return { deleted: false };
   }
