@@ -94,6 +94,16 @@ import { DistancePipe } from '../../pipes/distance.pipe';
             <div class="node-content">
               <span class="node-label">{{ leg.event.name }}</span>
               <span class="node-venue">{{ leg.event.venue.name }} · {{ leg.event.presenter }}</span>
+              @if (leg.colocatedEvents?.length) {
+                <div class="colocated-events">
+                  @for (co of leg.colocatedEvents; track co.id) {
+                    <div class="colocated-event">
+                      <span class="colocated-name">{{ co.name }}</span>
+                      <span class="colocated-presenter">{{ co.presenter }}</span>
+                    </div>
+                  }
+                </div>
+              }
               <div class="node-times">
                 <span class="badge arrive">{{ formatTime(leg.arrivalTime) }}</span>
                 <span class="badge stay">{{ leg.stayMinutes }} min</span>
@@ -282,6 +292,32 @@ import { DistancePipe } from '../../pipes/distance.pipe';
       font-size: 11px;
       color: #dc2626;
       font-weight: 500;
+    }
+
+    /* ── Co-located events at same venue ── */
+    .colocated-events {
+      margin-top: 4px;
+      padding: 4px 0 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .colocated-event {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: var(--accent-faint, #eef2ff);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .colocated-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .colocated-presenter {
+      color: var(--text-secondary);
+      font-size: 11px;
     }
 
     .timeline-node.exceeds .event-dot {

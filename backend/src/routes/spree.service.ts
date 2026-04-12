@@ -24,15 +24,16 @@ export class SpreeService {
   /**
    * Compute a spree plan:
    * 1. Resolve all selected events
-   * 2. Optimize visit order using chosen strategy
-   * 3. Compute real route segments via Google Routes API
-   * 4. Track cumulative time, idle waits, flag overflow
+   * 2. Merge co-located events (same venue, overlapping times) into single stops
+   * 3. Optimize visit order using chosen strategy
+   * 4. Compute real route segments via Google Routes API
+   * 5. Track cumulative time, idle waits, flag overflow
    */
   async computeSpreePlan(dto: ComputeSpreeDto): Promise<SpreePlan> {
     const { homeLocation, startTime, endTime, selections, strategy } = dto;
 
     // 1. Resolve events into SchedulableEvent[]
-    const schedulable: SchedulableEvent[] = [];
+    const allResolved: SchedulableEvent[] = [];
 
     for (let i = 0; i < selections.length; i++) {
       const sel = selections[i];
@@ -40,29 +41,32 @@ export class SpreeService {
       if (!ev) {
         throw new NotFoundException(`Event ${sel.eventId} not found`);
       }
-      schedulable.push({
+      allResolved.push({
         ...ev,
         stayMinutes: sel.stayMinutes,
         index: i,
       });
     }
 
-    // 2. Optimize visit order
+    // 2. Merge co-located events (same venue, overlapping times) into single stops
+    const { merged, expandMap } = this.mergeColocatedEvents(allResolved);
+
+    // 3. Optimize visit order
     const spreeStart = new Date(startTime);
     const spreeEnd = new Date(endTime);
 
     const optimization = strategy === 'time-sort'
-      ? this.routeOptimizer.optimizeByStartTime(schedulable)
+      ? this.routeOptimizer.optimizeByStartTime(merged)
       : this.routeOptimizer.optimizeGreedy(
           homeLocation,
-          schedulable,
+          merged,
           spreeStart,
           spreeEnd,
         );
 
     const { orderedEvents, skippedEvents, strategy: usedStrategy } = optimization;
 
-    // 3. Build legs with real route computation
+    // 4. Build legs with real route computation
     const legs: SpreeLeg[] = [];
     let currentLocation: LatLng = homeLocation;
     let currentLabel = 'Home';
@@ -100,6 +104,9 @@ export class SpreeService {
       // Does this leg exceed the spree window?
       const exceedsWindow = departureMs > spreeEnd.getTime();
 
+      // Expand co-located events back into the leg
+      const colocated = expandMap.get(ev.id);
+
       legs.push({
         order: i + 1,
         event: {
@@ -112,6 +119,7 @@ export class SpreeService {
           endTime: ev.endTime,
           venue: ev.venue,
         },
+        ...(colocated && colocated.length > 0 && { colocatedEvents: colocated }),
         travelFromPrevious: routeSegment,
         arrivalTime: new Date(effectiveArrivalMs).toISOString(),
         departureTime: new Date(departureMs).toISOString(),
@@ -177,5 +185,98 @@ export class SpreeService {
       stats,
       skippedEvents: skipped,
     };
+  }
+
+  /**
+   * Group events at the same venue with overlapping times into single stops.
+   * Returns merged events (one per venue group) and a map to expand them back.
+   */
+  private mergeColocatedEvents(events: SchedulableEvent[]): {
+    merged: SchedulableEvent[];
+    expandMap: Map<string, import('../common/interfaces').EventWithVenue[]>;
+  } {
+    // Group by venue googlePlaceId
+    const venueGroups = new Map<string, SchedulableEvent[]>();
+    for (const ev of events) {
+      const key = ev.venue.googlePlaceId;
+      if (!venueGroups.has(key)) venueGroups.set(key, []);
+      venueGroups.get(key)!.push(ev);
+    }
+
+    const merged: SchedulableEvent[] = [];
+    const expandMap = new Map<string, import('../common/interfaces').EventWithVenue[]>();
+
+    for (const [, group] of venueGroups) {
+      if (group.length === 1) {
+        merged.push(group[0]);
+        continue;
+      }
+
+      // Sort by start time
+      group.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+      // Merge overlapping events into clusters
+      const clusters: SchedulableEvent[][] = [];
+      let current = [group[0]];
+
+      for (let i = 1; i < group.length; i++) {
+        const lastEnd = Math.max(...current.map((e) => new Date(e.endTime).getTime()));
+        const nextStart = new Date(group[i].startTime).getTime();
+
+        if (nextStart <= lastEnd) {
+          // Overlapping — add to current cluster
+          current.push(group[i]);
+        } else {
+          clusters.push(current);
+          current = [group[i]];
+        }
+      }
+      clusters.push(current);
+
+      for (const cluster of clusters) {
+        if (cluster.length === 1) {
+          merged.push(cluster[0]);
+          continue;
+        }
+
+        // Merge: use earliest start, latest end, sum stay times
+        const primary = cluster[0];
+        const earliestStart = cluster.reduce((min, e) =>
+          e.startTime < min ? e.startTime : min, cluster[0].startTime);
+        const latestEnd = cluster.reduce((max, e) =>
+          e.endTime > max ? e.endTime : max, cluster[0].endTime);
+        const totalStay = cluster.reduce((sum, e) => sum + e.stayMinutes, 0);
+
+        const mergedEvent: SchedulableEvent = {
+          ...primary,
+          startTime: earliestStart,
+          endTime: latestEnd,
+          stayMinutes: totalStay,
+        };
+
+        merged.push(mergedEvent);
+
+        // Track the extra events for expansion
+        const extras = cluster.slice(1).map((e) => ({
+          id: e.id,
+          name: e.name,
+          presenter: e.presenter,
+          description: e.description,
+          venueId: e.venueId,
+          startTime: e.startTime,
+          endTime: e.endTime,
+          venue: e.venue,
+        }));
+        expandMap.set(primary.id, extras);
+      }
+    }
+
+    if (merged.length < events.length) {
+      this.logger.log(
+        `Merged ${events.length} events into ${merged.length} stops (${events.length - merged.length} co-located)`,
+      );
+    }
+
+    return { merged, expandMap };
   }
 }

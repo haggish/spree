@@ -272,129 +272,167 @@ export class MapComponent implements OnInit, OnDestroy {
       }
     }
 
+    // Group events by venue (same googlePlaceId = same marker)
+    const venueGroups = new Map<string, Array<EventWithVenue & { inRange: boolean }>>();
     for (const ev of events) {
-      const isSelected = selectedIds.has(ev.id);
-      const isDisabled = !ev.inRange;
-      const routeOrder = orderMap.get(ev.id);
-      const legExceeds = exceedsMap.get(ev.id) || false;
-      const hasOrder = routeOrder !== undefined;
+      const key = ev.venue.googlePlaceId;
+      if (!venueGroups.has(key)) venueGroups.set(key, []);
+      venueGroups.get(key)!.push(ev);
+    }
+
+    for (const [, venueEvents] of venueGroups) {
+      const first = venueEvents[0];
+      const anySelected = venueEvents.some((e) => selectedIds.has(e.id));
+      const allDisabled = venueEvents.every((e) => !e.inRange);
+
+      // Find lowest route order among events at this venue
+      let lowestOrder: number | undefined;
+      let anyExceeds = false;
+      for (const e of venueEvents) {
+        const order = orderMap.get(e.id);
+        if (order !== undefined) {
+          if (lowestOrder === undefined || order < lowestOrder) lowestOrder = order;
+          if (exceedsMap.get(e.id)) anyExceeds = true;
+        }
+      }
+      const hasOrder = lowestOrder !== undefined;
 
       // Determine marker color
-      let bgColor = '#6366f1';   // default indigo
+      let bgColor = '#6366f1';
       let borderColor = '#4f46e5';
-      if (isDisabled) {
+      if (allDisabled) {
         bgColor = '#94a3b8'; borderColor = '#64748b';
-      } else if (hasOrder && legExceeds) {
-        bgColor = '#f59e0b'; borderColor = '#d97706'; // amber for exceeds
-      } else if (isSelected) {
-        bgColor = '#10b981'; borderColor = '#059669'; // green
+      } else if (hasOrder && anyExceeds) {
+        bgColor = '#f59e0b'; borderColor = '#d97706';
+      } else if (anySelected) {
+        bgColor = '#10b981'; borderColor = '#059669';
       }
 
       // Determine marker label
       const label = hasOrder
-        ? String(routeOrder)
-        : isSelected
+        ? String(lowestOrder)
+        : anySelected
           ? '✓'
-          : escapeHtml(ev.venue.name.charAt(0));
+          : escapeHtml(first.venue.name.charAt(0));
 
       const size = hasOrder ? 36 : 32;
+      const count = venueEvents.length;
 
       const pin = document.createElement('div');
       pin.innerHTML = `
         <div style="
+          position: relative;
           width: ${size}px; height: ${size}px;
           background: ${bgColor};
           border: 3px solid ${borderColor};
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          opacity: ${isDisabled ? '0.5' : '1'};
+          opacity: ${allDisabled ? '0.5' : '1'};
           transition: transform 0.15s ease;
-          cursor: ${isDisabled ? 'not-allowed' : 'pointer'};
+          cursor: ${allDisabled ? 'not-allowed' : 'pointer'};
           font-size: ${hasOrder ? '15px' : '14px'}; color: white; font-weight: 700;
-        ">${label}</div>
+        ">${label}${count > 1 ? `<span style="
+          position: absolute; top: -6px; right: -6px;
+          width: 18px; height: 18px;
+          background: #1e293b; color: white;
+          border-radius: 50%; border: 2px solid white;
+          font-size: 10px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center;
+        ">${count}</span>` : ''}</div>
       `;
 
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map: this.map,
-        position: ev.venue.location,
+        position: first.venue.location,
         content: pin,
-        title: ev.venue.name,
-        zIndex: isSelected ? 100 : isDisabled ? 1 : 50,
+        title: first.venue.name,
+        zIndex: anySelected ? 100 : allDisabled ? 1 : 50,
       });
 
       marker.addListener('click', () => {
-        this.showEventInfo(ev, isDisabled, marker);
+        this.showVenueInfo(venueEvents, allDisabled, marker);
       });
 
       this.markers.push(marker);
     }
   }
 
-  private showEventInfo(
-    ev: EventWithVenue & { inRange: boolean },
-    isDisabled: boolean,
+  private showVenueInfo(
+    events: Array<EventWithVenue & { inRange: boolean }>,
+    allDisabled: boolean,
     marker: google.maps.marker.AdvancedMarkerElement,
   ): void {
     if (!this.infoWindow || !this.map) return;
 
-    const isSelected = this.state.selectedEventIds().has(ev.id);
-    const startTime = new Date(ev.startTime).toLocaleTimeString('de-DE', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const endTime = new Date(ev.endTime).toLocaleTimeString('de-DE', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const venueName = escapeHtml(events[0].venue.name);
+    const selectedIds = this.state.selectedEventIds();
 
-    const safeId = escapeHtml(ev.id);
+    const eventCards = events.map((ev) => {
+      const isSelected = selectedIds.has(ev.id);
+      const isDisabled = !ev.inRange;
+      const startTime = new Date(ev.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const endTime = new Date(ev.endTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const safeId = escapeHtml(ev.id);
+
+      return `
+        <div style="padding: 8px 0; ${events.length > 1 ? 'border-bottom: 1px solid #e2e8f0;' : ''}">
+          <h4 style="margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #1e293b;">
+            ${escapeHtml(ev.name)}
+          </h4>
+          <p style="margin: 0 0 2px; font-size: 11px; color: #64748b;">
+            ${escapeHtml(ev.presenter)}
+          </p>
+          <p style="margin: 0 0 4px; font-size: 11px; color: #475569;">
+            🕐 ${startTime} – ${endTime}
+          </p>
+          <p style="margin: 0 0 6px; font-size: 12px; color: #334155; line-height: 1.3;">
+            ${escapeHtml(ev.description)}
+          </p>
+          ${isDisabled
+            ? `<div style="padding: 4px 8px; background: #f1f5f9; border-radius: 6px; font-size: 11px; color: #94a3b8; text-align: center;">
+                Outside your spree time window
+              </div>`
+            : `<button
+                id="spree-toggle-${safeId}"
+                style="
+                  width: 100%; padding: 6px 10px; border: none; border-radius: 6px;
+                  font-size: 12px; font-weight: 600; cursor: pointer;
+                  background: ${isSelected ? '#fee2e2' : '#6366f1'};
+                  color: ${isSelected ? '#dc2626' : 'white'};
+                "
+              >
+                ${isSelected ? '✕ Remove' : '＋ Add to Spree'}
+              </button>`
+          }
+        </div>
+      `;
+    }).join('');
+
     const content = `
-      <div style="font-family: system-ui, sans-serif; max-width: 260px; padding: 4px;">
-        <h3 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1e293b;">
-          ${escapeHtml(ev.name)}
-        </h3>
-        <p style="margin: 0 0 4px; font-size: 12px; color: #64748b;">
-          ${escapeHtml(ev.presenter)} · ${escapeHtml(ev.venue.name)}
+      <div style="font-family: system-ui, sans-serif; max-width: 280px; padding: 4px;">
+        <p style="margin: 0 0 4px; font-size: 12px; font-weight: 600; color: #6366f1;">
+          📍 ${venueName}${events.length > 1 ? ` · ${events.length} events` : ''}
         </p>
-        <p style="margin: 0 0 8px; font-size: 12px; color: #475569;">
-          🕐 ${startTime} – ${endTime}
-        </p>
-        <p style="margin: 0 0 10px; font-size: 13px; color: #334155; line-height: 1.4;">
-          ${escapeHtml(ev.description)}
-        </p>
-        ${isDisabled
-          ? `<div style="padding: 6px 10px; background: #f1f5f9; border-radius: 6px; font-size: 12px; color: #94a3b8; text-align: center;">
-              Outside your spree time window
-            </div>`
-          : `<button
-              id="spree-toggle-${safeId}"
-              style="
-                width: 100%; padding: 8px 12px; border: none; border-radius: 8px;
-                font-size: 13px; font-weight: 600; cursor: pointer;
-                background: ${isSelected ? '#fee2e2' : '#6366f1'};
-                color: ${isSelected ? '#dc2626' : 'white'};
-                transition: opacity 0.15s;
-              "
-            >
-              ${isSelected ? '✕ Remove from Spree' : '＋ Add to Spree'}
-            </button>`
-        }
+        ${eventCards}
       </div>
     `;
 
     this.infoWindow.setContent(content);
     this.infoWindow.open(this.map, marker);
 
-    // Attach click handler after info window renders
-    if (!isDisabled) {
+    // Attach click handlers for all event buttons
+    if (!allDisabled) {
       setTimeout(() => {
-        const btn = document.getElementById(`spree-toggle-${safeId}`);
-        if (btn) {
-          btn.addEventListener('click', () => {
-            this.state.toggleEventSelection(ev.id);
-            this.infoWindow?.close();
-          });
+        for (const ev of events) {
+          if (!ev.inRange) continue;
+          const btn = document.getElementById(`spree-toggle-${escapeHtml(ev.id)}`);
+          if (btn) {
+            btn.addEventListener('click', () => {
+              this.state.toggleEventSelection(ev.id);
+              this.infoWindow?.close();
+            });
+          }
         }
       }, 100);
     }

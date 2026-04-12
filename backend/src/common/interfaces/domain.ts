@@ -88,6 +88,7 @@ export interface SpreePlan {
 export interface SpreeLeg {
   order: number;
   event: EventWithVenue;
+  colocatedEvents?: EventWithVenue[];  // additional events at the same venue
   travelFromPrevious: RouteSegment;
   arrivalTime: string;        // ISO 8601 — when user arrives
   departureTime: string;      // ISO 8601 — when user leaves (arrival + stay)

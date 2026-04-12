@@ -60,6 +60,7 @@ export interface SpreeSelection {
 export interface SpreeLeg {
   order: number;
   event: EventWithVenue;
+  colocatedEvents?: EventWithVenue[];  // additional events at the same venue
   travelFromPrevious: RouteSegment;
   arrivalTime: string;
   departureTime: string;
