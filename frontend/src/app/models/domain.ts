@@ -122,6 +122,9 @@ export interface ComputeSpreeRequest {
   strategy: string;
 }
 
+// ── Live Spree leg status ──
+export type LiveLegStatus = 'upcoming' | 'next' | 'checked-in' | 'visited' | 'excluded';
+
 // ── Spree configuration (UI state) ──
 export interface SpreeConfig {
   homeLocation: LatLng;

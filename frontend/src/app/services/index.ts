@@ -6,3 +6,7 @@ export { GoogleMapsLoaderService } from './google-maps-loader.service';
 export { AuthService } from './auth.service';
 export { SavedSpreesApiService } from './saved-sprees-api.service';
 export { authInterceptor } from './auth.interceptor';
+export { GeolocationService } from './geolocation.service';
+export { LiveSpreeStateService } from './live-spree-state.service';
+export { ProximityService } from './proximity.service';
+export { haversineDistance } from './geo-utils';

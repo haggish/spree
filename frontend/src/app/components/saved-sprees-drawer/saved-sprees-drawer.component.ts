@@ -1,5 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService, SavedSpreesApiService, SpreeStateService } from '../../services';
 import { SavedSpree } from '../../services/saved-sprees-api.service';
 
@@ -59,6 +60,13 @@ import { SavedSpree } from '../../services/saved-sprees-api.service';
                     }
                   </div>
                   <div class="spree-actions">
+                    <button
+                      class="live-btn"
+                      (click)="goLive(spree.id)"
+                      title="Start Live Spree"
+                    >
+                      ▶ Live
+                    </button>
                     <button
                       class="load-btn"
                       (click)="loadSpree(spree)"
@@ -254,6 +262,19 @@ import { SavedSpree } from '../../services/saved-sprees-api.service';
       gap: 6px;
       flex-shrink: 0;
     }
+    .live-btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #dc2626;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 32px;
+      min-width: auto;
+    }
+    .live-btn:active { opacity: 0.8; }
     .load-btn {
       padding: 6px 14px;
       border: none;
@@ -287,6 +308,7 @@ export class SavedSpreesDrawerComponent {
   readonly auth = inject(AuthService);
   private readonly savedApi = inject(SavedSpreesApiService);
   private readonly spreeState = inject(SpreeStateService);
+  private readonly router = inject(Router);
 
   readonly open = signal(false);
   readonly sprees = signal<SavedSpree[]>([]);
@@ -333,6 +355,11 @@ export class SavedSpreesDrawerComponent {
     this.spreeState.spreePlan.set(plan);
 
     this.open.set(false);
+  }
+
+  goLive(id: string): void {
+    this.open.set(false);
+    this.router.navigate(['/live', id]);
   }
 
   deleteSpree(id: string): void {
