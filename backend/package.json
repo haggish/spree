@@ -13,11 +13,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.19",
-    "@nestjs/core": "^11.1.19",
+    "@nestjs/common": "^11.1.26",
+    "@nestjs/core": "^11.1.26",
     "@nestjs/passport": "^11.0.0",
-    "@nestjs/platform-express": "^11.1.19",
-    "@nestjs/swagger": "^11.4.1",
+    "@nestjs/platform-express": "^11.1.26",
+    "@nestjs/swagger": "^11.4.4",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.1",
     "class-transformer": "^0.5.1",
@@ -33,9 +33,9 @@
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.21",
+    "@nestjs/cli": "^11.0.23",
     "@nestjs/schematics": "^11.1.0",
-    "@nestjs/testing": "^11.1.19",
+    "@nestjs/testing": "^11.1.26",
     "@swc/core": "^1.15.30",
     "@types/express": "^5.0.0",
     "@types/node": "^25.6.0",
